@@ -221,6 +221,21 @@ body {
   100% { transform: scale(0.4) rotate(30deg) translate(200vw, -120vh); opacity: 0; }
 }
 
+#chess-link {
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  text-decoration: none;
+  line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  transition: transform 0.2s;
+  animation: plane-hover 2.5s ease-in-out infinite alternate;
+  display: inline-block;
+}
+
+#chess-link:hover {
+  animation: none;
+  transform: scale(1.2) rotate(8deg);
+}
+
 /* ==================== DODGE BUTTON ==================== */
 #dodge-btn-wrapper {
   position: relative;

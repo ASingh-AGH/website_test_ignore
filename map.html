@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ali's Journey ✈️</title>
+  <title>Ali's Silly Journey ✈️</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0a1628;
-      color: #e0eeff;
       min-height: 100vh;
+      animation: bgShift 3s infinite alternate;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -19,22 +19,51 @@
       overflow-x: hidden;
     }
 
+    @keyframes bgShift {
+      0%   { background: linear-gradient(135deg, #ff6ec7, #ffb347); }
+      25%  { background: linear-gradient(135deg, #a84fff, #4ff0ff); }
+      50%  { background: linear-gradient(135deg, #ffe94f, #ff4fa3); }
+      75%  { background: linear-gradient(135deg, #4ff0ff, #a84fff); }
+      100% { background: linear-gradient(135deg, #ff4fa3, #ffe94f); }
+    }
+
     h1 {
-      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-size: clamp(2rem, 6vw, 3.5rem);
       font-weight: 900;
-      background: linear-gradient(90deg, #ff4fa3, #ffe94f, #4ff0ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #fff;
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.18), -1px -1px 0 rgba(0,0,0,0.1);
       margin-bottom: 0.3rem;
       text-align: center;
+      animation: wobble 0.9s infinite;
+    }
+
+    @keyframes wobble {
+      0%, 100% { transform: rotate(-1.5deg); }
+      50%       { transform: rotate(1.5deg); }
     }
 
     .subtitle {
       font-size: 1rem;
-      color: rgba(200,220,255,0.7);
-      margin-bottom: 1.5rem;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 0.5rem;
       text-align: center;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+    }
+
+    .photo-hint {
+      font-size: 0.9rem;
+      color: #fff;
+      background: rgba(0,0,0,0.25);
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      animation: pulse-text 1.4s infinite alternate;
+    }
+
+    @keyframes pulse-text {
+      from { opacity: 0.75; transform: scale(1); }
+      to   { opacity: 1;    transform: scale(1.03); }
     }
 
     /* ---- MAP CONTAINER ---- */
@@ -44,8 +73,7 @@
       max-width: 760px;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 0 60px rgba(79,163,255,0.25);
-      border: 2px solid rgba(79,163,255,0.2);
+      box-shadow: 0 0 0 4px #fff, 0 0 0 8px #ff4fa3, 0 8px 40px rgba(255,79,163,0.35);
     }
 
     #europe-map {
@@ -53,6 +81,13 @@
       width: 100%;
       height: auto;
     }
+
+    /* Clickable photo-city dots in the SVG */
+    .photo-city {
+      cursor: pointer;
+      transition: r 0.15s;
+    }
+    .photo-city:hover { filter: brightness(1.4); }
 
     /* Plane overlay div */
     #map-plane {
@@ -74,114 +109,224 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      margin: 1.5rem 0 1rem;
+      margin: 1.2rem 0 0.75rem;
       font-size: 0.95rem;
     }
 
     .route-stop {
       padding: 0.4rem 0.9rem;
       border-radius: 999px;
-      border: 2px solid rgba(79,163,255,0.3);
-      background: rgba(79,163,255,0.08);
-      opacity: 0.3;
-      transition: opacity 0.6s, border-color 0.6s, background 0.6s;
+      border: 2px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.6);
+      opacity: 0.55;
+      transition: opacity 0.6s, border-color 0.6s, background 0.6s, color 0.6s;
     }
 
     .route-stop.active {
       opacity: 1;
-      border-color: #ff4fa3;
-      background: rgba(255,79,163,0.15);
-      color: #ffe94f;
+      border-color: #fff;
+      background: rgba(255,255,255,0.25);
+      color: #fff;
       font-weight: 700;
+      text-shadow: 0 0 8px rgba(255,255,255,0.8);
     }
 
     .route-stop.done {
-      opacity: 0.7;
-      border-color: #4ff0ff;
-      background: rgba(79,240,255,0.1);
-      color: #4ff0ff;
+      opacity: 0.8;
+      border-color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.75);
     }
 
     .route-arrow {
-      color: rgba(200,220,255,0.4);
+      color: rgba(255,255,255,0.5);
       font-size: 1.1rem;
     }
 
     /* ---- BUTTONS ---- */
     .btn-row {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
       justify-content: center;
       margin-top: 1.2rem;
     }
 
     .btn {
-      padding: 0.7rem 1.8rem;
+      padding: 0.65rem 1.6rem;
       border-radius: 999px;
       border: none;
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s, opacity 0.15s;
-    }
-    .btn:hover { transform: scale(1.05); }
-    .btn:active { transform: scale(0.97); }
-
-    #back-btn {
-      background: rgba(255,255,255,0.1);
-      color: #e0eeff;
-      border: 2px solid rgba(255,255,255,0.2);
+      transition: transform 0.15s, box-shadow 0.15s;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
     }
+    .btn:hover  { transform: scale(1.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .btn:active { transform: scale(0.97); }
 
-    #replay-btn {
+    .btn-ghost {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+
+    .btn-primary {
       background: linear-gradient(135deg, #ff4fa3, #a84fff);
       color: #fff;
-      border: none;
+    }
+
+    .btn-chess {
+      background: linear-gradient(135deg, #ffe94f, #ff6b35);
+      color: #333;
     }
 
     /* ---- LANDING CELEBRATION ---- */
     #landing-msg {
       display: none;
-      margin-top: 1rem;
+      margin-top: 0.75rem;
       font-size: 1.2rem;
       font-weight: 700;
-      color: #ffe94f;
+      color: #fff;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
       text-align: center;
       animation: pulse-text 1s infinite alternate;
     }
 
-    @keyframes pulse-text {
-      from { opacity: 0.7; transform: scale(1); }
-      to   { opacity: 1;   transform: scale(1.04); }
+    /* ---- PHOTO MODAL ---- */
+    #photo-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.25s ease;
+    }
+    #photo-modal[hidden] { display: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
 
-    /* City pop-up labels (SVG foreignObject alternative) */
-    .city-popup {
-      position: absolute;
-      background: rgba(10,22,40,0.9);
-      border: 1px solid #ff4fa3;
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      color: #ffe94f;
-      font-weight: 700;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.4s;
-      z-index: 20;
+    .modal-box {
+      background: linear-gradient(135deg, #fff 0%, #fff5fb 100%);
+      border-radius: 20px;
+      padding: 2rem 1.75rem 1.75rem;
+      max-width: 580px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 0 0 4px #ff4fa3, 0 12px 60px rgba(0,0,0,0.4);
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
     }
-    .city-popup.visible { opacity: 1; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.75); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      background: #ff4fa3;
+      border: none;
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 900;
+      line-height: 2rem;
+      text-align: center;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .modal-close:hover { transform: scale(1.15); background: #d63080; }
+
+    #modal-city-name {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #ff4fa3;
+      margin-bottom: 0.3rem;
+    }
+
+    #modal-city-desc {
+      font-size: 0.92rem;
+      color: #888;
+      margin-bottom: 1.1rem;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .photo-slot {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #ff4fa3;
+      background: #f5e6ff;
+      aspect-ratio: 4 / 3;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .photo-slot img {
+      width: 100%;
+      flex: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-slot .photo-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ccc;
+      font-size: 2.2rem;
+      background: #fdf0ff;
+    }
+
+    .photo-slot .photo-placeholder small {
+      font-size: 0.65rem;
+      color: #bbb;
+      margin-top: 0.25rem;
+      text-align: center;
+      padding: 0 0.5rem;
+    }
+
+    .photo-slot .caption {
+      font-size: 0.72rem;
+      text-align: center;
+      padding: 0.25rem 0.4rem;
+      color: #555;
+      background: #fff;
+      border-top: 1px solid #f0d0f8;
+    }
+
+    @keyframes confFall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+    }
   </style>
 </head>
 <body>
 
-  <h1>✈️ Ali's Journey</h1>
-  <p class="subtitle">From Germany all the way to Katowice, Poland — one epic adventure.</p>
+  <h1>✈️ Ali's Silly Journey! ✈️</h1>
+  <p class="subtitle">Flying from Germany all the way to Katowice for absolutely no reason 😂</p>
+  <p class="photo-hint">📸 Click on Berlin, Hannover, or Kraków to see memories!</p>
 
   <div id="map-wrap">
     <!--
@@ -189,11 +334,13 @@
       projX(lon) = (lon-4)/20*700
       projY(lat) = (56-lat)/9*500
 
-      Cities (lon, lat → svg x,y):
+      Cities:
         Erlangen  11.0, 49.6 → 245, 356
         Bremen     8.8, 53.1 → 168, 161
         Kraków    19.9, 50.1 → 557, 328
         Katowice  19.0, 50.3 → 525, 317
+        Berlin    13.4, 52.5 → 329, 194
+        Hannover   9.7, 52.4 → 200, 200
     -->
     <svg id="europe-map" viewBox="0 0 700 500" xmlns="http://www.w3.org/2000/svg">
 
@@ -202,19 +349,17 @@
 
       <!-- Grid lines (lat/lon graticule) -->
       <g stroke="rgba(79,163,255,0.1)" stroke-width="1">
-        <!-- Vertical lon lines every 4 degrees: 8,12,16,20 -->
         <line x1="140" y1="0" x2="140" y2="500"/>
         <line x1="280" y1="0" x2="280" y2="500"/>
         <line x1="420" y1="0" x2="420" y2="500"/>
         <line x1="560" y1="0" x2="560" y2="500"/>
-        <!-- Horizontal lat lines every 2 degrees: 48,50,52,54 -->
         <line x1="0" y1="444" x2="700" y2="444"/>
         <line x1="0" y1="333" x2="700" y2="333"/>
         <line x1="0" y1="222" x2="700" y2="222"/>
         <line x1="0" y1="111" x2="700" y2="111"/>
       </g>
 
-      <!-- North Sea / Baltic Sea label area (top strip) -->
+      <!-- Sea labels -->
       <text x="100" y="75" fill="rgba(79,163,255,0.45)" font-size="11" font-style="italic">North Sea</text>
       <text x="430" y="65" fill="rgba(79,163,255,0.45)" font-size="11" font-style="italic">Baltic Sea</text>
 
@@ -232,7 +377,7 @@
       <polygon points="300,278 368,306 518,344 507,389 300,411"
         fill="#1a3d22" stroke="#2a6030" stroke-width="1.5" opacity="0.9"/>
 
-      <!-- Austria (simplified sliver south of Bavaria/Czech) -->
+      <!-- Austria (simplified sliver) -->
       <polygon points="150,461 240,472 342,406 380,430 350,472 200,480"
         fill="#193825" stroke="#2d6040" stroke-width="1.5" opacity="0.8"/>
 
@@ -242,9 +387,15 @@
         fill="#24502e" stroke="#3a8a4a" stroke-width="2"/>
       <text x="530" y="220" fill="rgba(180,255,160,0.55)" font-size="13" font-weight="bold" text-anchor="middle">POLAND</text>
 
+      <!-- SVG filter for glow -->
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
       <!-- ---- FLIGHT PATH ---- -->
-      <!-- The path is drawn progressively via stroke-dashoffset animation -->
-      <!-- Total path length ≈ 667px; calculated below with JS -->
       <path id="flight-path"
         d="M 245,356 L 168,161 L 557,328 L 525,317"
         stroke="#ff4fa3"
@@ -254,131 +405,219 @@
         fill="none"
         opacity="0.9"/>
 
-      <!-- ---- CITY MARKERS ---- -->
-      <!-- Erlangen -->
-      <circle id="dot-erlangen" cx="245" cy="356" r="6"
-        fill="#ffe94f" stroke="#fff" stroke-width="1.5" opacity="0"/>
+      <!-- ---- ROUTE CITY MARKERS (appear during animation) ---- -->
+      <circle id="dot-erlangen" cx="245" cy="356" r="6" fill="#ffe94f" stroke="#fff" stroke-width="1.5" opacity="0"/>
+      <circle id="dot-bremen"   cx="168" cy="161" r="6" fill="#ffe94f" stroke="#fff" stroke-width="1.5" opacity="0"/>
+      <circle id="dot-krakow"   cx="557" cy="328" r="8" fill="#ffe94f" stroke="#fff" stroke-width="1.5" opacity="0"
+        class="photo-city" id2="dot-krakow" data-city="krakow" style="cursor:pointer"/>
+      <circle id="dot-katowice-glow" cx="525" cy="317" r="14" fill="#ff4fa3" opacity="0" filter="url(#glow)"/>
+      <circle id="dot-katowice" cx="525" cy="317" r="8"  fill="#ff4fa3" stroke="#fff" stroke-width="2"  opacity="0"/>
 
-      <!-- Bremen -->
-      <circle id="dot-bremen" cx="168" cy="161" r="6"
-        fill="#ffe94f" stroke="#fff" stroke-width="1.5" opacity="0"/>
-
-      <!-- Kraków -->
-      <circle id="dot-krakow" cx="557" cy="328" r="6"
-        fill="#ffe94f" stroke="#fff" stroke-width="1.5" opacity="0"/>
-
-      <!-- Katowice – final destination, bigger + glow -->
-      <circle id="dot-katowice-glow" cx="525" cy="317" r="14"
-        fill="#ff4fa3" opacity="0" filter="url(#glow)"/>
-      <circle id="dot-katowice" cx="525" cy="317" r="8"
-        fill="#ff4fa3" stroke="#fff" stroke-width="2" opacity="0"/>
-
-      <!-- SVG filter for glow effect -->
-      <defs>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <!-- City labels (SVG text) -->
+      <!-- City labels for route stops -->
       <text id="lbl-erlangen" x="255" y="350" fill="#ffe94f" font-size="11" font-weight="bold" opacity="0">Erlangen</text>
       <text id="lbl-bremen"   x="178" y="155" fill="#ffe94f" font-size="11" font-weight="bold" opacity="0">Bremen</text>
-      <text id="lbl-krakow"   x="567" y="322" fill="#ffe94f" font-size="11" font-weight="bold" opacity="0">Kraków</text>
+      <text id="lbl-krakow"   x="567" y="322" fill="#ffe94f" font-size="11" font-weight="bold" opacity="0">Kraków 📸</text>
       <text id="lbl-katowice" x="535" y="311" fill="#ff4fa3" font-size="12" font-weight="bold" opacity="0">Katowice 🎉</text>
+
+      <!-- ---- PHOTO CITIES (Berlin + Hannover, always visible) ---- -->
+      <!-- Berlin: 13.4°E 52.5°N → 329, 194 -->
+      <circle class="photo-city" data-city="berlin"   cx="329" cy="194" r="8"
+        fill="#4ff0ff" stroke="#fff" stroke-width="2"/>
+      <text x="340" y="188" fill="#4ff0ff" font-size="11" font-weight="bold"
+        pointer-events="none">Berlin 📸</text>
+
+      <!-- Hannover: 9.7°E 52.4°N → 200, 200 -->
+      <circle class="photo-city" data-city="hannover" cx="200" cy="200" r="8"
+        fill="#4ff0ff" stroke="#fff" stroke-width="2"/>
+      <text x="211" y="194" fill="#4ff0ff" font-size="11" font-weight="bold"
+        pointer-events="none">Hannover 📸</text>
 
     </svg><!-- /svg -->
 
-    <!-- Plane emoji overlaid on map via absolute positioning -->
+    <!-- Plane emoji overlaid on map -->
     <div id="map-plane">✈️</div>
 
   </div><!-- /map-wrap -->
 
   <!-- Route info strip -->
   <div id="route-info">
-    <span class="route-stop" id="stop-erlangen">📍 Erlangen, DE</span>
+    <span class="route-stop" id="stop-erlangen">📍 Erlangen</span>
     <span class="route-arrow">✈</span>
-    <span class="route-stop" id="stop-bremen">📍 Bremen, DE</span>
+    <span class="route-stop" id="stop-bremen">📍 Bremen</span>
     <span class="route-arrow">✈</span>
-    <span class="route-stop" id="stop-krakow">📍 Kraków, PL</span>
+    <span class="route-stop" id="stop-krakow">📍 Kraków</span>
     <span class="route-arrow">✈</span>
-    <span class="route-stop" id="stop-katowice">🎉 Katowice, PL</span>
+    <span class="route-stop" id="stop-katowice">🎉 Katowice!</span>
   </div>
 
-  <div id="landing-msg">🎉 Welcome to Katowice, Ali! 🎉</div>
+  <div id="landing-msg">🎉 LANDED IN KATOWICE! Welcome, Ali!! 🎉</div>
 
   <div class="btn-row">
-    <a href="index.html" id="back-btn" class="btn">← Back to the Party!</a>
-    <button id="replay-btn" class="btn">▶ Replay Journey</button>
+    <a href="index.html" class="btn btn-ghost">← Back to the Party!</a>
+    <button id="replay-btn" class="btn btn-primary">▶ Replay Journey</button>
+    <a href="chess.html" class="btn btn-chess">♟️ Play Chess!</a>
+  </div>
+
+  <!-- ==================== PHOTO MODAL ==================== -->
+  <div id="photo-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-city-name">
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close-btn" aria-label="Close">✕</button>
+      <h3 id="modal-city-name">City</h3>
+      <p id="modal-city-desc"></p>
+      <div class="photo-grid" id="modal-photos"></div>
+    </div>
   </div>
 
   <script>
+    // ==================== PHOTO CITY DATA ====================
+    // Add your own photos by placing images in a photos/ folder and
+    // updating the src values below. Placeholder slots show when src is missing.
+    const CITY_PHOTOS = {
+      krakow: {
+        label: 'Kraków 🇵🇱',
+        desc:  'Adventures in the beautiful old city!',
+        photos: [
+          { src: 'photos/krakow-1.jpg', caption: 'Kraków memories' },
+          { src: 'photos/krakow-2.jpg', caption: 'Old Town vibes'  },
+          { src: 'photos/krakow-3.jpg', caption: 'Good times'       },
+        ],
+      },
+      berlin: {
+        label: 'Berlin 🇩🇪',
+        desc:  'Berlin never disappoints!',
+        photos: [
+          { src: 'photos/berlin-1.jpg', caption: 'Berlin moments' },
+          { src: 'photos/berlin-2.jpg', caption: 'City adventures' },
+        ],
+      },
+      hannover: {
+        label: 'Hannover 🇩🇪',
+        desc:  'Hannover memories!',
+        photos: [
+          { src: 'photos/hannover-1.jpg', caption: 'Hannover vibes' },
+          { src: 'photos/hannover-2.jpg', caption: 'Good times'      },
+        ],
+      },
+    };
+
+    // ==================== PHOTO MODAL ====================
+    const photoModal    = document.getElementById('photo-modal');
+    const modalCityName = document.getElementById('modal-city-name');
+    const modalCityDesc = document.getElementById('modal-city-desc');
+    const modalPhotos   = document.getElementById('modal-photos');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    function openPhotoModal(cityKey) {
+      const data = CITY_PHOTOS[cityKey];
+      if (!data) return;
+
+      modalCityName.textContent = data.label;
+      modalCityDesc.textContent = data.desc;
+      modalPhotos.innerHTML = '';
+
+      data.photos.forEach(p => {
+        const slot = document.createElement('div');
+        slot.className = 'photo-slot';
+
+        const img = document.createElement('img');
+        img.alt = p.caption;
+        img.src = p.src;
+
+        // Show placeholder if image fails to load
+        img.onerror = () => {
+          img.remove();
+          const ph = document.createElement('div');
+          ph.className = 'photo-placeholder';
+          ph.innerHTML = `📷<small>${p.src}</small>`;
+          slot.prepend(ph);
+        };
+        slot.appendChild(img);
+
+        const cap = document.createElement('div');
+        cap.className = 'caption';
+        cap.textContent = p.caption;
+        slot.appendChild(cap);
+        modalPhotos.appendChild(slot);
+      });
+
+      photoModal.removeAttribute('hidden');
+    }
+
+    function closePhotoModal() {
+      photoModal.setAttribute('hidden', '');
+    }
+
+    modalCloseBtn.addEventListener('click', closePhotoModal);
+    photoModal.addEventListener('click', e => {
+      if (e.target === photoModal) closePhotoModal();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePhotoModal();
+    });
+
+    // Wire up SVG photo-city dots
+    document.querySelectorAll('.photo-city').forEach(el => {
+      el.addEventListener('click', () => openPhotoModal(el.dataset.city));
+    });
+    // Kraków dot from the route animation also opens photos when clicked
+    document.getElementById('dot-krakow').addEventListener('click', () => openPhotoModal('krakow'));
+
     // ==================== MAP ANIMATION ====================
-    const pathEl      = document.getElementById('flight-path');
-    const planeEl     = document.getElementById('map-plane');
-    const mapWrap     = document.getElementById('map-wrap');
-    const svgEl       = document.getElementById('europe-map');
-    const landingMsg  = document.getElementById('landing-msg');
-    const replayBtn   = document.getElementById('replay-btn');
+    const pathEl     = document.getElementById('flight-path');
+    const planeEl    = document.getElementById('map-plane');
+    const mapWrap    = document.getElementById('map-wrap');
+    const svgEl      = document.getElementById('europe-map');
+    const landingMsg = document.getElementById('landing-msg');
+    const replayBtn  = document.getElementById('replay-btn');
 
-    // Route waypoints as fractions of total path length
-    // Erlangen→Bremen ≈ 210px, Bremen→Kraków ≈ 423px, Kraków→Katowice ≈ 34px  total ≈ 667px
-  const TOTAL_LEN   = 667; // approximate; refined by getTotalLength() in init()
-    const DURATION_MS = 8000; // 8 seconds for full journey
+    const TOTAL_LEN   = 667; // approximate; refined by getTotalLength() in init()
+    const DURATION_MS = 8000;
 
-    // City stop fractions along the path
     const STOPS = [
-      { frac: 0,     stopId: 'stop-erlangen',  dotId: 'dot-erlangen',  lblId: 'lbl-erlangen',  glowId: null },
-      { frac: 0.315, stopId: 'stop-bremen',    dotId: 'dot-bremen',    lblId: 'lbl-bremen',    glowId: null },
-      { frac: 0.95,  stopId: 'stop-krakow',    dotId: 'dot-krakow',    lblId: 'lbl-krakow',    glowId: null },
-      { frac: 1.0,   stopId: 'stop-katowice',  dotId: 'dot-katowice',  lblId: 'lbl-katowice',  glowId: 'dot-katowice-glow' },
+      { frac: 0,     stopId: 'stop-erlangen', dotId: 'dot-erlangen', lblId: 'lbl-erlangen', glowId: null },
+      { frac: 0.315, stopId: 'stop-bremen',   dotId: 'dot-bremen',   lblId: 'lbl-bremen',   glowId: null },
+      { frac: 0.95,  stopId: 'stop-krakow',   dotId: 'dot-krakow',   lblId: 'lbl-krakow',   glowId: null },
+      { frac: 1.0,   stopId: 'stop-katowice', dotId: 'dot-katowice', lblId: 'lbl-katowice', glowId: 'dot-katowice-glow' },
     ];
 
-    let animationId   = null;
-    let startTime     = null;
-    let actualLen     = TOTAL_LEN;
+    let animationId    = null;
+    let startTime      = null;
+    let actualLen      = TOTAL_LEN;
     let stopsActivated = [];
 
     function init() {
-      // Get accurate path length
       try { actualLen = pathEl.getTotalLength(); } catch(e) { actualLen = TOTAL_LEN; }
 
-      // Hide path initially (dashoffset = actualLen hides it completely)
-      pathEl.style.strokeDasharray  = `10 7`;
-      // We'll drive stroke-dashoffset via JS to progressively draw the path
       // Extra margin (+20) ensures no rendering gap at the end of the dashed path
-      pathEl.style.strokeDasharray = String(actualLen + 20);
+      pathEl.style.strokeDasharray  = String(actualLen + 20);
       pathEl.style.strokeDashoffset = String(actualLen + 20);
 
-      // Reset city markers
       STOPS.forEach(s => {
-        setOpacity(s.dotId, 0);
-        setOpacity(s.lblId, 0);
-        if (s.glowId) setOpacity(s.glowId, 0);
+        setOp(s.dotId, 0);
+        setOp(s.lblId, 0);
+        if (s.glowId) setOp(s.glowId, 0);
         document.getElementById(s.stopId).className = 'route-stop';
       });
       stopsActivated = new Array(STOPS.length).fill(false);
 
       landingMsg.style.display = 'none';
-      planeEl.style.display = 'none';
-      startTime = null;
+      planeEl.style.display    = 'none';
+      startTime   = null;
       if (animationId) cancelAnimationFrame(animationId);
     }
 
-    function setOpacity(id, val) {
+    function setOp(id, val) {
       const el = document.getElementById(id);
       if (el) el.setAttribute('opacity', val);
     }
 
     function svgToScreen(svgX, svgY) {
-      const rect    = svgEl.getBoundingClientRect();
+      const rect     = svgEl.getBoundingClientRect();
       const wrapRect = mapWrap.getBoundingClientRect();
-      const viewBox  = svgEl.viewBox.baseVal;
-      const scaleX   = rect.width  / viewBox.width;
-      const scaleY   = rect.height / viewBox.height;
+      const vb       = svgEl.viewBox.baseVal;
       return {
-        x: (svgX * scaleX) + (rect.left - wrapRect.left),
-        y: (svgY * scaleY) + (rect.top  - wrapRect.top)
+        x: (svgX / vb.width)  * rect.width  + (rect.left - wrapRect.left),
+        y: (svgY / vb.height) * rect.height + (rect.top  - wrapRect.top),
       };
     }
 
@@ -387,89 +626,64 @@
       stopsActivated[index] = true;
       const s = STOPS[index];
 
-      // Dot + label appear
-      setOpacity(s.dotId, 1);
-      setOpacity(s.lblId, 1);
-      if (s.glowId) setOpacity(s.glowId, 0.6);
+      setOp(s.dotId, 1);
+      setOp(s.lblId, 1);
+      if (s.glowId) setOp(s.glowId, 0.6);
 
-      // Route strip
       const strip = document.getElementById(s.stopId);
-      // Mark previous as done
-      if (index > 0) {
-        const prev = document.getElementById(STOPS[index - 1].stopId);
-        prev.className = 'route-stop done';
-      }
+      if (index > 0) document.getElementById(STOPS[index - 1].stopId).className = 'route-stop done';
       strip.className = 'route-stop active';
 
-      // Landing celebration
       if (index === STOPS.length - 1) {
         setTimeout(() => {
           landingMsg.style.display = 'block';
-          spawnMapConfetti();
+          spawnConfetti();
         }, 400);
       }
     }
 
-    function animateFrame(timestamp) {
-      if (!startTime) startTime = timestamp;
-      const elapsed  = timestamp - startTime;
-      const progress = Math.min(elapsed / DURATION_MS, 1);
-
-      // Ease in-out cubic
+    function animateFrame(ts) {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / DURATION_MS, 1);
       const eased = progress < 0.5
         ? 4 * progress * progress * progress
         : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
       const dist = eased * actualLen;
 
-      // Draw path progressively
-  pathEl.style.strokeDashoffset = String(actualLen + 20 - dist);
+      pathEl.style.strokeDashoffset = String(actualLen + 20 - dist);
 
-      // Move plane
-      const pt      = pathEl.getPointAtLength(Math.min(dist, actualLen));
-      const ptAhead = pathEl.getPointAtLength(Math.min(dist + 2, actualLen));
-      const angle   = Math.atan2(ptAhead.y - pt.y, ptAhead.x - pt.x) * 180 / Math.PI;
+      const pt     = pathEl.getPointAtLength(Math.min(dist, actualLen));
+      const ptNext = pathEl.getPointAtLength(Math.min(dist + 2, actualLen));
+      const angle  = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x) * 180 / Math.PI;
 
-      const screen = svgToScreen(pt.x, pt.y);
-      planeEl.style.left      = screen.x + 'px';
-      planeEl.style.top       = screen.y + 'px';
-      planeEl.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+      const sc = svgToScreen(pt.x, pt.y);
+      planeEl.style.left      = sc.x + 'px';
+      planeEl.style.top       = sc.y + 'px';
+      planeEl.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
+      planeEl.style.display   = 'block';
 
-      if (!planeEl.style.display || planeEl.style.display === 'none') {
-        planeEl.style.display = 'block';
-      }
-
-      // Activate city stops when plane reaches them
       STOPS.forEach((s, i) => {
-        if (!stopsActivated[i] && eased >= s.frac) {
-          activateStop(i);
-        }
+        if (!stopsActivated[i] && eased >= s.frac) activateStop(i);
       });
 
       if (progress < 1) {
         animationId = requestAnimationFrame(animateFrame);
       } else {
-        // Ensure all stops activated
         STOPS.forEach((_, i) => activateStop(i));
       }
     }
 
     function startAnimation() {
       init();
-      // Small delay to let browser render
-      setTimeout(() => {
-        animationId = requestAnimationFrame(animateFrame);
-      }, 500);
+      setTimeout(() => { animationId = requestAnimationFrame(animateFrame); }, 500);
     }
 
     replayBtn.addEventListener('click', startAnimation);
-
-    // Auto-start on load
     window.addEventListener('load', startAnimation);
 
-    // ==================== MAP CONFETTI ====================
+    // ==================== CONFETTI ====================
     const COLORS = ['#ff4fa3','#ffe94f','#4ff0ff','#a84fff','#ff6b35','#7fff00'];
-    function spawnMapConfetti() {
+    function spawnConfetti() {
       for (let i = 0; i < 80; i++) {
         setTimeout(() => {
           const el = document.createElement('div');
@@ -483,21 +697,33 @@
             borderRadius: Math.random() > 0.5 ? '50%' : '2px',
             pointerEvents: 'none',
             zIndex: '9999',
-            animation: `confFall ${2.5 + Math.random() * 3}s linear forwards`
+            animation: `confFall ${2.5 + Math.random() * 3}s linear forwards`,
           });
           document.body.appendChild(el);
           setTimeout(() => el.remove(), 6000);
         }, Math.random() * 2000);
       }
     }
-  </script>
 
-  <style>
-    @keyframes confFall {
-      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
-    }
-  </style>
+    // Gentle ongoing drizzle once the page is active
+    setInterval(() => {
+      const el = document.createElement('div');
+      Object.assign(el.style, {
+        position: 'fixed',
+        left: Math.random() * 100 + 'vw',
+        top: '-20px',
+        width:  (5 + Math.random() * 8) + 'px',
+        height: (5 + Math.random() * 8) + 'px',
+        backgroundColor: COLORS[Math.floor(Math.random() * COLORS.length)],
+        borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+        pointerEvents: 'none',
+        zIndex: '9998',
+        animation: `confFall ${3 + Math.random() * 3}s linear forwards`,
+      });
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 7000);
+    }, 600);
+  </script>
 
 </body>
 </html>
