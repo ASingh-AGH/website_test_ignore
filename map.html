@@ -323,7 +323,7 @@
 
     // Route waypoints as fractions of total path length
     // Erlangen→Bremen ≈ 210px, Bremen→Kraków ≈ 423px, Kraków→Katowice ≈ 34px  total ≈ 667px
-    const TOTAL_LEN   = 667; // approximate; refined by getTotalLength below
+  const TOTAL_LEN   = 667; // approximate; refined by getTotalLength() in init()
     const DURATION_MS = 8000; // 8 seconds for full journey
 
     // City stop fractions along the path
@@ -346,7 +346,7 @@
       // Hide path initially (dashoffset = actualLen hides it completely)
       pathEl.style.strokeDasharray  = `10 7`;
       // We'll drive stroke-dashoffset via JS to progressively draw the path
-      // Use a solid dashes approach: dasharray = totalLen, offset = totalLen → 0
+      // Extra margin (+20) ensures no rendering gap at the end of the dashed path
       pathEl.style.strokeDasharray = String(actualLen + 20);
       pathEl.style.strokeDashoffset = String(actualLen + 20);
 
@@ -423,7 +423,7 @@
       const dist = eased * actualLen;
 
       // Draw path progressively
-      pathEl.style.strokeDashoffset = String(actualLen + 20 - dist);
+  pathEl.style.strokeDashoffset = String(actualLen + 20 - dist);
 
       // Move plane
       const pt      = pathEl.getPointAtLength(Math.min(dist, actualLen));

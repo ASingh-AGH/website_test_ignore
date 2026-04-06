@@ -92,7 +92,7 @@ let lastTrailTime = 0;
 document.addEventListener('mousemove', (e) => {
   if (!chaosStarted) return;
   const now = Date.now();
-  if (now - lastTrailTime < 40) return; // throttle to ~25fps
+  if (now - lastTrailTime < 40) return; // throttle to 25fps (browser timing may vary)
   lastTrailTime = now;
   spawnInteractiveConfetti(e.clientX, e.clientY, 'trail');
 });
