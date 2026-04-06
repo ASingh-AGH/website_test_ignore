@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Message for Ali 🎂</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ==================== CALM INTRO PAGE ==================== -->
+  <section id="intro-page">
+    <h1>Hey, Ali&hellip;</h1>
+    <p>
+      I just wanted to take a quiet moment to pass along<br>
+      a small, totally normal, completely ordinary message.
+    </p>
+    <button id="calm-btn">Open message&nbsp;&rarr;</button>
+  </section>
+
+  <!-- ==================== CHAOS PAGE ==================== -->
+  <section id="chaos-page">
+
+    <!-- 🎂 Big Title -->
+    <h1 id="birthday-title">🎉 HAPPY BIRTHDAY, ALI!! 🎉</h1>
+    <p id="birthday-subtitle">
+      You absolute legend. You made it another year without being launched into the sun. 🌞
+    </p>
+
+    <!-- Spinning emoji ring -->
+    <div class="emoji-ring" aria-label="decorative emojis">
+      <span title="click me!">🎂</span>
+      <span>🎈</span>
+      <span>🦄</span>
+      <span>🎊</span>
+      <span>🕺</span>
+      <span>🎸</span>
+      <span>🍕</span>
+      <span>🎈</span>
+      <span>🥳</span>
+      <span>🚀</span>
+      <span>🦄</span>
+      <span>🎂</span>
+    </div>
+
+    <!-- ==================== INSIDE JOKE CARDS ==================== -->
+    <div class="joke-section">
+
+      <div class="joke-card">
+        <span class="joke-label">🤣 JOKE_A</span>
+        Remember the time you tried to <strong>[JOKE_A: insert the legendary story here]</strong>?
+        To this day nobody has fully recovered. Scientists are still studying it.
+      </div>
+
+      <div class="joke-card">
+        <span class="joke-label">😬 JOKE_B</span>
+        Nobody will EVER forget <strong>[JOKE_B: the incident with the thing at the place]</strong>.
+        Historians will call it "the event". You know what you did.
+      </div>
+
+      <div class="joke-card">
+        <span class="joke-label">💀 JOKE_C</span>
+        And of course, who could overlook <strong>[JOKE_C: that one phrase you always say]</strong>?
+        It's been said approximately 4,000 times. Merch incoming.
+      </div>
+
+      <div class="joke-card">
+        <span class="joke-label">🏆 JOKE_D</span>
+        Special award goes to Ali for <strong>[JOKE_D: that impressive/embarrassing achievement]</strong>.
+        Frame it. Put it on a resumé. Own it.
+      </div>
+
+    </div>
+
+    <!-- ==================== DODGING BUTTON ==================== -->
+    <button id="dodge-btn" title="Try to click me!">
+      😈&nbsp; Catch me if you can!
+    </button>
+    <div id="dodge-btn-wrapper" aria-hidden="true"></div>
+
+    <!-- ==================== CHALLENGE SECTION ==================== -->
+    <div id="challenge-section">
+      <h2>🔒 Unlock Ali's Secret Message</h2>
+      <p style="color:rgba(255,255,255,0.85); font-size:0.95rem; margin-bottom:0.5rem;">
+        You must prove your love by clicking this button
+        <strong style="color:var(--secondary)">15&nbsp;times</strong>.
+        No shortcuts. No magic. Just pure dedication.
+      </p>
+
+      <span id="challenge-count">0</span>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+      <p id="challenge-progress" style="margin-top:0.5rem; color:rgba(255,255,255,0.7); font-size:0.9rem;">
+        15 clicks to go…
+      </p>
+
+      <button id="challenge-btn">💖 Click for Ali</button>
+    </div>
+
+    <!-- ==================== HEARTFELT MESSAGE ==================== -->
+    <div id="heartfelt-section" role="region" aria-label="birthday message">
+      <h2>🎂 For Ali, with love 🎂</h2>
+      <p>
+        Okay, the chaos is over — for a second. 🙂<br><br>
+        In all seriousness, you are one of the most genuinely kind,
+        hilariously funny, and wonderfully weird people I know.
+        Every moment with you turns into a story worth retelling
+        (sometimes against our will 😂).<br><br>
+        You bring so much light and laughter into the lives of everyone
+        around you, and today we get to celebrate <em>you</em> — the
+        legend, the myth, the person who somehow makes even the most
+        mundane Tuesday feel like an adventure.<br><br>
+        I hope this birthday is as brilliant, chaotic, and utterly
+        unforgettable as you are. You deserve every single good thing
+        the universe has to offer — and maybe a slice (or five) of cake.
+        🎂🍰🧁
+      </p>
+      <p class="signature">
+        Happy Birthday, Ali! 🥳🎉<br>
+        <span style="font-size:0.95rem; font-weight:400; color:#666;">
+          — Your friends who definitely didn't spend too long on this website
+        </span>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <footer id="chaos-footer">
+      Made with 💖, questionable CSS decisions, and zero regrets.
+    </footer>
+
+  </section><!-- /#chaos-page -->
+
+  <!-- Hidden confetti container (pieces appended to body dynamically) -->
+  <div id="confetti-container" aria-hidden="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
