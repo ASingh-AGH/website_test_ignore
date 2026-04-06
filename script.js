@@ -2,49 +2,61 @@
 const CHALLENGE_TARGET = 15; // clicks needed to unlock heartfelt message
 let challengeCount = 0;
 let chaosStarted = false;
+let colorsActivated = false;
 
 // ==================== DOM REFS ====================
-const introPage       = document.getElementById('intro-page');
-const chaosPage       = document.getElementById('chaos-page');
-const calmBtn         = document.getElementById('calm-btn');
-const dodgeBtn        = document.getElementById('dodge-btn');
-const challengeBtn    = document.getElementById('challenge-btn');
-const challengeCountEl = document.getElementById('challenge-count');
+const introPage         = document.getElementById('intro-page');
+const chaosPage         = document.getElementById('chaos-page');
+const calmBtn           = document.getElementById('calm-btn');
+const dodgeBtn          = document.getElementById('dodge-btn');
+const airplaneBtn       = document.getElementById('airplane-btn');
+const challengeBtn      = document.getElementById('challenge-btn');
+const challengeCountEl  = document.getElementById('challenge-count');
 const challengeProgress = document.getElementById('challenge-progress');
-const progressBar     = document.getElementById('progress-bar');
-const heartfeltSection = document.getElementById('heartfelt-section');
+const progressBar       = document.getElementById('progress-bar');
+const heartfeltSection  = document.getElementById('heartfelt-section');
 const confettiContainer = document.getElementById('confetti-container');
 
 // ==================== INTRO → CHAOS ====================
 calmBtn.addEventListener('click', launchChaos);
 
-// Also auto-launch after 5 seconds for maximum ambush effect
-setTimeout(() => {
-  if (!chaosStarted) launchChaos();
-}, 5000);
-
 function launchChaos() {
   if (chaosStarted) return;
   chaosStarted = true;
 
-  // Flash the intro page white
   introPage.style.transition = 'opacity 0.3s';
   introPage.style.opacity = '0';
 
   setTimeout(() => {
     introPage.style.display = 'none';
-    chaosPage.classList.add('visible', 'chaos-bg');
+    // Show chaos page WITHOUT rainbow bg – colors activate later
+    chaosPage.classList.add('visible');
 
-    // Fire confetti immediately
-    launchConfettiBurst(120);
-
-    // Play a fun web-audio fanfare
+    // Modest confetti to signal the page opened
+    launchConfettiBurst(40);
     playFanfare();
-
-    // Activate dodging button
     initDodgeButton();
   }, 350);
 }
+
+// ==================== FULL COLORFUL REVEAL ====================
+// Triggered by clicking the heartfelt section once it is visible
+function activateFullChaos() {
+  if (colorsActivated) return;
+  colorsActivated = true;
+
+  chaosPage.classList.add('chaos-bg');
+  heartfeltSection.classList.add('colors-activated');
+  heartfeltSection.style.cursor = 'default';
+
+  launchConfettiBurst(200);
+  playFanfare();
+}
+
+heartfeltSection.addEventListener('click', activateFullChaos);
+heartfeltSection.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') activateFullChaos();
+});
 
 // ==================== CONFETTI ====================
 const CONFETTI_COLORS = ['#ff4fa3','#ffe94f','#4ff0ff','#a84fff','#ff6b35','#7fff00'];
@@ -74,6 +86,52 @@ const confettiInterval = setInterval(() => {
   if (chaosStarted) spawnConfettiPiece();
 }, 300);
 
+// ==================== INTERACTIVE CONFETTI ====================
+// Trail: small pieces left behind as the mouse moves
+let lastTrailTime = 0;
+document.addEventListener('mousemove', (e) => {
+  if (!chaosStarted) return;
+  const now = Date.now();
+  if (now - lastTrailTime < 40) return; // throttle to ~25fps
+  lastTrailTime = now;
+  spawnInteractiveConfetti(e.clientX, e.clientY, 'trail');
+});
+
+// Explosion: burst from click point (skip interactive elements)
+document.addEventListener('click', (e) => {
+  if (!chaosStarted) return;
+  if (e.target.closest('button, a, input, [role="button"]')) return;
+  for (let i = 0; i < 28; i++) {
+    spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
+  }
+  playPop();
+});
+
+function spawnInteractiveConfetti(x, y, type) {
+  const el = document.createElement('div');
+  el.className = `confetti-interact ${type}`;
+  const size = (type === 'trail' ? 4 : 6) + Math.random() * 6;
+  el.style.width  = size + 'px';
+  el.style.height = size + 'px';
+  el.style.left   = x + 'px';
+  el.style.top    = y + 'px';
+  el.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+  el.style.borderRadius = Math.random() > 0.4 ? '50%' : '2px';
+
+  if (type === 'explode') {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 80 + Math.random() * 160;
+    el.style.setProperty('--tx',  Math.cos(angle) * dist + 'px');
+    el.style.setProperty('--ty',  Math.sin(angle) * dist + 'px');
+    el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+    el.style.setProperty('--dur', (0.5 + Math.random() * 0.7) + 's');
+  }
+
+  document.body.appendChild(el);
+  const lifespan = type === 'trail' ? 700 : 1300;
+  setTimeout(() => el.remove(), lifespan);
+}
+
 // ==================== DODGE BUTTON ====================
 function initDodgeButton() {
   dodgeBtn.style.left = '50%';
@@ -98,7 +156,6 @@ document.addEventListener('mousemove', (e) => {
     let newX = btnRect.left - Math.cos(angle) * flee;
     let newY = btnRect.top  - Math.sin(angle) * flee;
 
-    // Clamp to viewport
     newX = Math.max(10, Math.min(window.innerWidth  - btnRect.width  - 10, newX));
     newY = Math.max(10, Math.min(window.innerHeight - btnRect.height - 10, newY));
 
@@ -122,6 +179,17 @@ document.addEventListener('touchmove', (e) => {
     clientY: touch.clientY
   }));
 }, { passive: true });
+
+// ==================== AIRPLANE ====================
+airplaneBtn.addEventListener('click', () => {
+  airplaneBtn.classList.add('launching');
+  playFanfare();
+
+  // Navigate to map page after launch animation completes (1.2s)
+  setTimeout(() => {
+    window.location.href = 'map.html';
+  }, 1100);
+});
 
 // ==================== CHALLENGE BUTTON ====================
 challengeBtn.addEventListener('click', () => {
@@ -151,7 +219,7 @@ function unlockHeartfelt() {
   setTimeout(() => {
     heartfeltSection.classList.add('visible');
     heartfeltSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    launchConfettiBurst(200);
+    launchConfettiBurst(80);
     playFanfare();
   }, 600);
 }
