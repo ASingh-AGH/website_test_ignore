@@ -9,7 +9,7 @@ const chaosPage       = document.getElementById('chaos-page');
 const calmBtn         = document.getElementById('calm-btn');
 const dodgeBtn        = document.getElementById('dodge-btn');
 const challengeBtn    = document.getElementById('challenge-btn');
-const challengeCount_ = document.getElementById('challenge-count');
+const challengeCountEl = document.getElementById('challenge-count');
 const challengeProgress = document.getElementById('challenge-progress');
 const progressBar     = document.getElementById('progress-bar');
 const heartfeltSection = document.getElementById('heartfelt-section');
@@ -69,8 +69,8 @@ function spawnConfettiPiece() {
   setTimeout(() => el.remove(), duration * 1000 + 200);
 }
 
-// Ongoing confetti drizzle
-setInterval(() => {
+// Ongoing confetti drizzle – stored so it can be cleared if needed
+const confettiInterval = setInterval(() => {
   if (chaosStarted) spawnConfettiPiece();
 }, 300);
 
@@ -129,7 +129,7 @@ challengeBtn.addEventListener('click', () => {
   challengeCount++;
   const pct = (challengeCount / CHALLENGE_TARGET) * 100;
 
-  challengeCount_.textContent = challengeCount;
+  challengeCountEl.textContent = challengeCount;
   progressBar.style.width = pct + '%';
   challengeProgress.textContent =
     challengeCount < CHALLENGE_TARGET
@@ -165,6 +165,7 @@ function getAudioCtx() {
 }
 
 function playTone(frequency, type, duration, startTime, gainVal = 0.3) {
+  if (gainVal <= 0) return;
   const ctx = getAudioCtx();
   const osc  = ctx.createOscillator();
   const gain = ctx.createGain();

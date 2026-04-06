@@ -201,6 +201,15 @@ body {
   transform: translate(2px, 2px);
 }
 
+/* Keyboard focus: stop dodging and return to a reachable position */
+#dodge-btn:focus-visible {
+  left: 50% !important;
+  top: 3rem !important;
+  transform: translateX(-50%);
+  outline: 3px solid var(--accent);
+  transition: none !important;
+}
+
 /* ==================== CHALLENGE SECTION ==================== */
 #challenge-section {
   margin: 2rem auto;
