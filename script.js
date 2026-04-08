@@ -397,15 +397,23 @@ tapEl.addEventListener('keydown', e => {
 // map.html or chess.html.  The wa_return flag is the guard: it is set on that
 // click and consumed when index.html reloads.  A hard refresh (F5) never sets
 // the flag, so the conversation always starts fresh on a true page reload.
+//
+// To avoid injecting raw HTML from sessionStorage (XSS risk), we serialise
+// only primitive data: beat indices that have been rendered.  On restore we
+// reconstruct each bubble from the original SCRIPT array and template
+// functions — no external HTML ever enters innerHTML.
 
 function saveState() {
-  const msgNodes = [...chatEl.children]
-    .filter(el => el.id !== 'typing-indicator')
-    .map(el => el.outerHTML)
-    .join('');
+  // Collect indices of beats that have already been rendered (preload/msg only)
+  const renderedIdxs = [];
+  for (let i = 0; i < qIdx; i++) {
+    const t = SCRIPT[i].type;
+    if (t === 'preload' || t === 'msg') renderedIdxs.push(i);
+  }
 
   sessionStorage.setItem('wa_state', JSON.stringify({
-    msgs:           msgNodes,
+    renderedIdxs,
+    heartfeltShown,
     qIdx,
     gateOpen,
     gateLabel:      gateOpen ? tapEl.textContent : null,
@@ -441,23 +449,52 @@ function restoreChallenge() {
   }
 }
 
+function buildHeartfeltWrap() {
+  const wrap   = document.createElement('div');
+  wrap.className = 'wa-msg received';
+  const bubble = document.createElement('div');
+  bubble.className = 'wa-bubble heartfelt-bubble';
+  bubble.innerHTML = mkHeartfeltHTML(); // mkHeartfeltHTML is hardcoded, not user-supplied
+  const ts = document.createElement('span');
+  ts.className   = 'wa-time';
+  ts.textContent = getTime();
+  bubble.appendChild(ts);
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
 function loadState() {
   if (sessionStorage.getItem('wa_return') !== '1') return false;
   const raw = sessionStorage.getItem('wa_state');
   if (!raw) { sessionStorage.removeItem('wa_return'); return false; }
   sessionStorage.removeItem('wa_return');
 
-  const s = JSON.parse(raw);
+  let s;
+  try { s = JSON.parse(raw); } catch (e) { return false; }
+
   qIdx           = s.qIdx           || 0;
   challengeCount = s.challengeCount || 0;
   challengeDone  = s.challengeDone  || false;
+  heartfeltShown = s.heartfeltShown || false;
 
-  // Restore messages without pop-in animation
+  // Re-render saved beats without pop-in animation
   chatEl.classList.add('restore-mode');
-  typingEl.insertAdjacentHTML('beforebegin', s.msgs || '');
+
+  for (const idx of (s.renderedIdxs || [])) {
+    const beat = SCRIPT[idx];
+    if (!beat) continue;
+    const el = buildBubble(beat, beat.time || getTime());
+    chatEl.insertBefore(el, typingEl);
+    // initChallenge is handled separately via restoreChallenge below
+  }
+
+  if (heartfeltShown) {
+    chatEl.insertBefore(buildHeartfeltWrap(), typingEl);
+  }
+
   requestAnimationFrame(() => chatEl.classList.remove('restore-mode'));
 
-  // Re-wire the challenge button if it's in the restored HTML
+  // Re-wire the challenge button if it's in the restored DOM
   if (document.getElementById('chat-challenge-btn')) {
     restoreChallenge();
   }
@@ -466,7 +503,6 @@ function loadState() {
     setGate(s.gateLabel);
   } else {
     clearGate();
-    // Resume auto-play from the saved position if there are more beats
     if (qIdx < SCRIPT.length) setTimeout(advance, 350);
   }
 
@@ -477,6 +513,7 @@ function loadState() {
 // ==================== CHALLENGE ====================
 let challengeCount = 0;
 let challengeDone  = false;
+let heartfeltShown = false;
 
 function initChallenge() {
   const btn = document.getElementById('chat-challenge-btn');
@@ -513,17 +550,8 @@ function revealHeartfelt() {
   statusEl.textContent = 'typing...';
   setTimeout(() => {
     hideTyping();
-    const wrap   = document.createElement('div');
-    wrap.className = 'wa-msg received';
-    const bubble = document.createElement('div');
-    bubble.className = 'wa-bubble heartfelt-bubble';
-    bubble.innerHTML = mkHeartfeltHTML();
-    const ts = document.createElement('span');
-    ts.className   = 'wa-time';
-    ts.textContent = getTime();
-    bubble.appendChild(ts);
-    wrap.appendChild(bubble);
-    chatEl.insertBefore(wrap, typingEl);
+    heartfeltShown = true;
+    chatEl.insertBefore(buildHeartfeltWrap(), typingEl);
     scrollBottom();
     launchConfettiBurst(80);
     playFanfare();
@@ -535,7 +563,6 @@ function runLoadingBar() {
   const bar      = document.getElementById('wa-load-progress');
   const isReturn = sessionStorage.getItem('wa_return') === '1';
   let pct = 0;
-  const step = isReturn ? (Math.random() * 45 + 30) : (Math.random() * 18 + 4);
   const tick = isReturn ? 70 : 160;
   const iv = setInterval(() => {
     pct += isReturn ? (Math.random() * 45 + 30) : (Math.random() * 18 + 4);
