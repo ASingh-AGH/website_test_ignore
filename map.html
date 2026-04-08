@@ -10,25 +10,17 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       min-height: 100vh;
-      animation: bgShift 3s infinite alternate;
-      color: #fff;
+      background: #0b141a;
+      color: #e9edef;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1.5rem 1rem 3rem;
+      padding: 4.2rem 1rem 3rem;
       overflow-x: hidden;
     }
 
-    @keyframes bgShift {
-      0%   { background: linear-gradient(135deg, #ff6ec7, #ffb347); }
-      25%  { background: linear-gradient(135deg, #a84fff, #4ff0ff); }
-      50%  { background: linear-gradient(135deg, #ffe94f, #ff4fa3); }
-      75%  { background: linear-gradient(135deg, #4ff0ff, #a84fff); }
-      100% { background: linear-gradient(135deg, #ff4fa3, #ffe94f); }
-    }
-
     h1 {
-      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-size: clamp(1.6rem, 5vw, 2.8rem);
       font-weight: 900;
       color: #fff;
       text-shadow: 3px 3px 0 rgba(0,0,0,0.18), -1px -1px 0 rgba(0,0,0,0.1);
@@ -42,18 +34,51 @@
       50%       { transform: rotate(1.5deg); }
     }
 
+    /* ---- WA PAGE HEADER ---- */
+    .wa-page-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      background: #1f2c34;
+      border-bottom: 1px solid #2a3942;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      gap: 0.65rem;
+    }
+    .wa-back-link {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      text-decoration: none;
+      color: #e9edef;
+    }
+    .wa-back-link:hover .wa-back-arrow { color: #00a884; }
+    .wa-back-arrow { font-size: 1.6rem; color: #8696a0; line-height: 1; flex-shrink: 0; }
+    .wa-page-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #2a3942;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem;
+      border: 2px solid #00a884;
+      flex-shrink: 0;
+    }
+    .wa-page-name   { font-size: 0.93rem; font-weight: 600; color: #e9edef; }
+    .wa-page-status { font-size: 0.72rem; color: #00a884; }
+
     .subtitle {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.92);
+      font-size: 0.95rem;
+      color: #8696a0;
       margin-bottom: 0.5rem;
       text-align: center;
-      text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
     }
 
     .photo-hint {
-      font-size: 0.9rem;
-      color: #fff;
-      background: rgba(0,0,0,0.25);
+      font-size: 0.87rem;
+      color: #8696a0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #2a3942;
       border-radius: 999px;
       padding: 0.3rem 1rem;
       margin-bottom: 1rem;
@@ -73,7 +98,7 @@
       max-width: 760px;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 0 0 4px #fff, 0 0 0 8px #ff4fa3, 0 8px 40px rgba(255,79,163,0.35);
+      box-shadow: 0 0 0 3px #2a3942, 0 0 0 5px #00a884, 0 8px 40px rgba(0,168,132,0.2);
     }
 
     #europe-map {
@@ -114,33 +139,31 @@
     }
 
     .route-stop {
-      padding: 0.4rem 0.9rem;
+      padding: 0.38rem 0.85rem;
       border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.35);
-      background: rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.6);
-      opacity: 0.55;
-      transition: opacity 0.6s, border-color 0.6s, background 0.6s, color 0.6s;
+      border: 1px solid #2a3942;
+      background: #202c33;
+      color: #8696a0;
+      opacity: 1;
+      transition: border-color 0.5s, background 0.5s, color 0.5s;
     }
 
     .route-stop.active {
-      opacity: 1;
-      border-color: #fff;
-      background: rgba(255,255,255,0.25);
-      color: #fff;
+      border-color: #00a884;
+      background: rgba(0,168,132,0.15);
+      color: #e9edef;
       font-weight: 700;
-      text-shadow: 0 0 8px rgba(255,255,255,0.8);
+      text-shadow: none;
     }
 
     .route-stop.done {
-      opacity: 0.8;
-      border-color: rgba(255,255,255,0.5);
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.75);
+      border-color: #2a3942;
+      background: transparent;
+      color: #8696a0;
     }
 
     .route-arrow {
-      color: rgba(255,255,255,0.5);
+      color: #2a3942;
       font-size: 1.1rem;
     }
 
@@ -169,29 +192,29 @@
     .btn:active { transform: scale(0.97); }
 
     .btn-ghost {
-      background: rgba(255,255,255,0.18);
-      color: #fff;
-      border: 2px solid rgba(255,255,255,0.4);
+      background: #202c33;
+      color: #e9edef;
+      border: 1px solid #2a3942;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #ff4fa3, #a84fff);
+      background: #00a884;
       color: #fff;
     }
 
     .btn-chess {
-      background: linear-gradient(135deg, #ffe94f, #ff6b35);
-      color: #333;
+      background: linear-gradient(135deg, #005c4b, #007a62);
+      color: #e9edef;
+      border: 1px solid #00a884;
     }
 
     /* ---- LANDING CELEBRATION ---- */
     #landing-msg {
       display: none;
       margin-top: 0.75rem;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      color: #fff;
-      text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+      color: #00a884;
       text-align: center;
       animation: pulse-text 1s infinite alternate;
     }
@@ -216,15 +239,15 @@
     }
 
     .modal-box {
-      background: linear-gradient(135deg, #fff 0%, #fff5fb 100%);
-      border-radius: 20px;
+      background: #202c33;
+      border-radius: 16px;
       padding: 2rem 1.75rem 1.75rem;
       max-width: 580px;
       width: 100%;
       max-height: 85vh;
       overflow-y: auto;
       position: relative;
-      box-shadow: 0 0 0 4px #ff4fa3, 0 12px 60px rgba(0,0,0,0.4);
+      box-shadow: 0 0 0 2px #2a3942, 0 0 0 4px #00a884, 0 12px 60px rgba(0,0,0,0.6);
       animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
     }
 
@@ -237,7 +260,7 @@
       position: absolute;
       top: 0.85rem;
       right: 0.85rem;
-      background: #ff4fa3;
+      background: #00a884;
       border: none;
       border-radius: 50%;
       width: 2rem;
@@ -250,18 +273,18 @@
       text-align: center;
       transition: transform 0.15s, background 0.15s;
     }
-    .modal-close:hover { transform: scale(1.15); background: #d63080; }
+    .modal-close:hover { transform: scale(1.15); background: #008f72; }
 
     #modal-city-name {
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       font-weight: 900;
-      color: #ff4fa3;
+      color: #00a884;
       margin-bottom: 0.3rem;
     }
 
     #modal-city-desc {
-      font-size: 0.92rem;
-      color: #888;
+      font-size: 0.9rem;
+      color: #8696a0;
       margin-bottom: 1.1rem;
     }
 
@@ -272,10 +295,10 @@
     }
 
     .photo-slot {
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
-      border: 2px solid #ff4fa3;
-      background: #f5e6ff;
+      border: 1px solid #2a3942;
+      background: #1a2634;
       aspect-ratio: 4 / 3;
       display: flex;
       flex-direction: column;
@@ -294,14 +317,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #ccc;
-      font-size: 2.2rem;
-      background: #fdf0ff;
+      color: #8696a0;
+      font-size: 2rem;
+      background: #0b141a;
     }
 
     .photo-slot .photo-placeholder small {
-      font-size: 0.65rem;
-      color: #bbb;
+      font-size: 0.62rem;
+      color: #8696a0;
       margin-top: 0.25rem;
       text-align: center;
       padding: 0 0.5rem;
@@ -311,9 +334,9 @@
       font-size: 0.72rem;
       text-align: center;
       padding: 0.25rem 0.4rem;
-      color: #555;
-      background: #fff;
-      border-top: 1px solid #f0d0f8;
+      color: #8696a0;
+      background: #1a2634;
+      border-top: 1px solid #2a3942;
     }
 
     @keyframes confFall {
@@ -323,6 +346,18 @@
   </style>
 </head>
 <body>
+
+  <!-- WA-style back header -->
+  <header class="wa-page-header">
+    <a href="index.html" class="wa-back-link" aria-label="Back to chat">
+      <span class="wa-back-arrow">‹</span>
+      <div class="wa-page-avatar">💬</div>
+      <div>
+        <div class="wa-page-name">Your Friends 🎉</div>
+        <div class="wa-page-status">online</div>
+      </div>
+    </a>
+  </header>
 
   <h1>✈️ Ali's Silly Journey! ✈️</h1>
   <p class="subtitle">Flying from Germany all the way to Katowice for absolutely no reason 😂</p>
@@ -453,7 +488,7 @@
   <div id="landing-msg">🎉 LANDED IN KATOWICE! Welcome, Ali!! 🎉</div>
 
   <div class="btn-row">
-    <a href="index.html" class="btn btn-ghost">← Back to the Party!</a>
+    <a href="index.html" class="btn btn-ghost">‹ Back to chat</a>
     <button id="replay-btn" class="btn btn-primary">▶ Replay Journey</button>
     <a href="chess.html" class="btn btn-chess">♟️ Play Chess!</a>
   </div>

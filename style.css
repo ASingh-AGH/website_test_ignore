@@ -563,6 +563,9 @@ body {
 .confetti-interact.explode { animation: confetti-explode var(--dur, 0.9s) ease-out forwards; }
 
 /* ==================== ANIMATIONS ==================== */
+/* Suppress pop-in animation when restoring saved messages */
+#chat-messages.restore-mode .wa-msg { animation: none !important; }
+
 @keyframes confetti-fall {
   0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
   100% { transform: translateY(110vh)  rotate(720deg); opacity: 0.2; }

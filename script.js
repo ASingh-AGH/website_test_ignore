@@ -392,6 +392,88 @@ tapEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); }
 });
 
+// ==================== STATE PERSISTENCE ====================
+// State is saved to sessionStorage only when the user explicitly navigates to
+// map.html or chess.html.  The wa_return flag is the guard: it is set on that
+// click and consumed when index.html reloads.  A hard refresh (F5) never sets
+// the flag, so the conversation always starts fresh on a true page reload.
+
+function saveState() {
+  const msgNodes = [...chatEl.children]
+    .filter(el => el.id !== 'typing-indicator')
+    .map(el => el.outerHTML)
+    .join('');
+
+  sessionStorage.setItem('wa_state', JSON.stringify({
+    msgs:           msgNodes,
+    qIdx,
+    gateOpen,
+    gateLabel:      gateOpen ? tapEl.textContent : null,
+    challengeCount,
+    challengeDone,
+  }));
+  sessionStorage.setItem('wa_return', '1');
+}
+
+// Intercept clicks on outbound links so state is saved before navigating away
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[href="map.html"], a[href="chess.html"]');
+  if (!link) return;
+  saveState();
+}, true); // capture phase so it fires before any stopPropagation
+
+function restoreChallenge() {
+  const btn        = document.getElementById('chat-challenge-btn');
+  const countEl    = document.getElementById('chat-challenge-count');
+  const barEl      = document.getElementById('chat-progress-bar');
+  const progressEl = document.getElementById('chat-challenge-progress');
+
+  if (countEl) countEl.textContent = challengeCount;
+  if (barEl)   barEl.style.width   = (challengeCount / 15 * 100) + '%';
+
+  if (challengeDone) {
+    if (progressEl) progressEl.textContent = '🎉 Unlocked!';
+    if (btn) { btn.disabled = true; btn.textContent = '✅ Done!'; }
+  } else {
+    const rem = 15 - challengeCount;
+    if (progressEl) progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
+    initChallenge(); // re-attach click handler
+  }
+}
+
+function loadState() {
+  if (sessionStorage.getItem('wa_return') !== '1') return false;
+  const raw = sessionStorage.getItem('wa_state');
+  if (!raw) { sessionStorage.removeItem('wa_return'); return false; }
+  sessionStorage.removeItem('wa_return');
+
+  const s = JSON.parse(raw);
+  qIdx           = s.qIdx           || 0;
+  challengeCount = s.challengeCount || 0;
+  challengeDone  = s.challengeDone  || false;
+
+  // Restore messages without pop-in animation
+  chatEl.classList.add('restore-mode');
+  typingEl.insertAdjacentHTML('beforebegin', s.msgs || '');
+  requestAnimationFrame(() => chatEl.classList.remove('restore-mode'));
+
+  // Re-wire the challenge button if it's in the restored HTML
+  if (document.getElementById('chat-challenge-btn')) {
+    restoreChallenge();
+  }
+
+  if (s.gateOpen && s.gateLabel) {
+    setGate(s.gateLabel);
+  } else {
+    clearGate();
+    // Resume auto-play from the saved position if there are more beats
+    if (qIdx < SCRIPT.length) setTimeout(advance, 350);
+  }
+
+  scrollBottom();
+  return true;
+}
+
 // ==================== CHALLENGE ====================
 let challengeCount = 0;
 let challengeDone  = false;
@@ -450,17 +532,20 @@ function revealHeartfelt() {
 
 // ==================== LOADING SCREEN ====================
 function runLoadingBar() {
-  const bar = document.getElementById('wa-load-progress');
-  let pct   = 0;
-  const iv  = setInterval(() => {
-    pct += Math.random() * 18 + 4;
+  const bar      = document.getElementById('wa-load-progress');
+  const isReturn = sessionStorage.getItem('wa_return') === '1';
+  let pct = 0;
+  const step = isReturn ? (Math.random() * 45 + 30) : (Math.random() * 18 + 4);
+  const tick = isReturn ? 70 : 160;
+  const iv = setInterval(() => {
+    pct += isReturn ? (Math.random() * 45 + 30) : (Math.random() * 18 + 4);
     if (pct > 100) pct = 100;
     bar.style.width = pct + '%';
     if (pct >= 100) {
       clearInterval(iv);
-      setTimeout(openChat, 500);
+      setTimeout(openChat, isReturn ? 180 : 500);
     }
-  }, 160);
+  }, tick);
 }
 
 function openChat() {
@@ -473,13 +558,21 @@ function openChat() {
     app.removeAttribute('aria-hidden');
     app.classList.add('visible');
     drizzleActive = true;
-    // Give the UI a moment to render before starting messages
-    setTimeout(advance, 500);
+
+    // If returning from map/chess, restore saved state; otherwise start fresh
+    if (!loadState()) {
+      setTimeout(advance, 500);
+    }
   }, 580);
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
+  const isReturn = sessionStorage.getItem('wa_return') === '1';
+  if (isReturn) {
+    const hint = document.querySelector('.wa-load-hint');
+    if (hint) hint.innerHTML = 'Reconnecting<span class="wa-load-dots"></span>';
+  }
   clearGate();
   runLoadingBar();
 });
