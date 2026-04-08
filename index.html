@@ -3,144 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A Message for Ali 🎂</title>
+  <title>💬 Message for Ali</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ==================== CALM INTRO PAGE ==================== -->
-  <section id="intro-page">
-    <h1>Hey, Ali&hellip;</h1>
-    <p>
-      I just wanted to take a quiet moment to pass along<br>
-      a small, totally normal, completely ordinary message.
-    </p>
-    <button id="calm-btn">Open message&nbsp;&rarr;</button>
-  </section>
+  <!-- ==================== LOADING SCREEN ==================== -->
+  <div id="wa-loading" aria-label="Loading chat">
+    <div class="wa-load-logo">💬</div>
+    <div class="wa-load-name">Your Friends 🎉</div>
+    <div class="wa-load-bar"><div id="wa-load-progress"></div></div>
+    <p class="wa-load-hint">Loading<span class="wa-load-dots"></span></p>
+    <p class="wa-load-footer">🔒 end-to-end encrypted</p>
+  </div>
 
-  <!-- ==================== CHAOS PAGE ==================== -->
-  <section id="chaos-page">
+  <!-- ==================== WHATSAPP CHAT APP ==================== -->
+  <div id="wa-app" aria-hidden="true">
 
-    <!-- 🎂 Big Title -->
-    <h1 id="birthday-title">🎉 HAPPY BIRTHDAY, ALI!! 🎉</h1>
-    <p id="birthday-subtitle">
-      You absolute legend. You made it another year without being launched into the sun. 🌞
-    </p>
-
-    <!-- Spinning emoji ring -->
-    <div class="emoji-ring" aria-label="decorative emojis">
-      <span title="click me!">🎂</span>
-      <span>🎈</span>
-      <span>🦄</span>
-      <span>🎊</span>
-      <span>🕺</span>
-      <span>🎸</span>
-      <span>🍕</span>
-      <span>🎈</span>
-      <span>🥳</span>
-      <span>🚀</span>
-      <span>🦄</span>
-      <span>🎂</span>
-    </div>
-
-    <!-- ==================== INSIDE JOKE CARDS ====================
-         Replace [JOKE_A] … [JOKE_D] placeholders with real inside jokes!
-    -->
-    <div class="joke-section">
-
-      <div class="joke-card">
-        <span class="joke-label">🤣 JOKE_A</span>
-        Remember the time you tried to <strong>[JOKE_A: insert the legendary story here]</strong>?
-        To this day nobody has fully recovered. Scientists are still studying it.
+    <!-- Chat header -->
+    <header id="wa-header">
+      <div class="wa-header-left">
+        <div class="wa-avatar">👥</div>
+        <div class="wa-header-info">
+          <div class="wa-header-name">Your Friends 🎉</div>
+          <div id="wa-header-status" class="wa-header-status">online</div>
+        </div>
       </div>
-
-      <div class="joke-card">
-        <span class="joke-label">😬 JOKE_B</span>
-        Nobody will EVER forget <strong>[JOKE_B: the incident with the thing at the place]</strong>.
-        Historians will call it "the event". You know what you did.
+      <div class="wa-header-icons">
+        <span aria-label="video call">📹</span>
+        <span aria-label="call">📞</span>
+        <span aria-label="menu">⋮</span>
       </div>
+    </header>
 
-      <div class="joke-card">
-        <span class="joke-label">💀 JOKE_C</span>
-        And of course, who could overlook <strong>[JOKE_C: that one phrase you always say]</strong>?
-        It's been said approximately 4,000 times. Merch incoming.
+    <!-- Messages area -->
+    <div id="chat-window">
+      <div id="chat-messages">
+        <div class="wa-date-chip">Today</div>
+        <!-- Messages injected by script.js -->
+
+        <!-- Typing indicator — always sits at the bottom of the list -->
+        <div id="typing-indicator" class="wa-msg received" style="display:none"
+             aria-live="polite" aria-label="Your friends are typing">
+          <div class="typing-bubble">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
       </div>
-
-      <div class="joke-card">
-        <span class="joke-label">🏆 JOKE_D</span>
-        Special award goes to Ali for <strong>[JOKE_D: that impressive/embarrassing achievement]</strong>.
-        Frame it. Put it on a resumé. Own it.
-      </div>
-
     </div>
 
-    <!-- ==================== AIRPLANE ==================== -->
-    <div id="airplane-section">
-      <p class="airplane-hint">✨ Click the plane to see where Ali's journey began…</p>
-      <button id="airplane-btn" title="Click me to take a trip!">✈️</button>
-      <a href="chess.html" id="chess-link" title="Play chess!">♟️</a>
-      <p class="airplane-hint" style="margin-top:0">← challenge someone to chess!</p>
+    <!-- Fake input bar (acts as tap-to-continue) -->
+    <div id="wa-input-bar">
+      <button class="wa-emoji-btn" aria-label="Emoji" tabindex="-1">😊</button>
+      <div id="wa-tap-hint" class="wa-tap-hint" role="button" tabindex="0"
+           aria-label="Tap to continue">Type a message</div>
+      <button class="wa-send-btn locked" id="wa-send-btn" aria-label="Continue">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor"
+            d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817z"/>
+        </svg>
+      </button>
     </div>
 
-    <!-- ==================== DODGING BUTTON ==================== -->
-    <button id="dodge-btn" title="Try to click me!">
-      😈&nbsp; Catch me if you can!
-    </button>
-    <div id="dodge-btn-wrapper" aria-hidden="true"></div>
+  </div><!-- /#wa-app -->
 
-    <!-- ==================== CHALLENGE SECTION ==================== -->
-    <div id="challenge-section">
-      <h2>🔒 Unlock Ali's Secret Message</h2>
-      <p style="color:rgba(255,255,255,0.85); font-size:0.95rem; margin-bottom:0.5rem;">
-        You must prove your love by clicking this button
-        <strong style="color:var(--secondary)">15&nbsp;times</strong>.
-        No shortcuts. No magic. Just pure dedication.
-      </p>
-
-      <span id="challenge-count">0</span>
-      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-      <p id="challenge-progress" style="margin-top:0.5rem; color:rgba(255,255,255,0.7); font-size:0.9rem;">
-        15 clicks to go…
-      </p>
-
-      <button id="challenge-btn">💖 Click for Ali</button>
-    </div>
-
-    <!-- ==================== HEARTFELT MESSAGE ==================== -->
-    <div id="heartfelt-section" role="region" aria-label="birthday message" tabindex="0">
-      <div id="heartfelt-click-hint">🎨 Click anywhere here to unleash the full celebration!</div>
-      <h2>🎂 For Ali, with love 🎂</h2>
-      <p>
-        Okay, the chaos is over — for a second. 🙂<br><br>
-        In all seriousness, you are one of the most genuinely kind,
-        hilariously funny, and wonderfully weird people I know.
-        Every moment with you turns into a story worth retelling
-        (sometimes against our will 😂).<br><br>
-        You bring so much light and laughter into the lives of everyone
-        around you, and today we get to celebrate <em>you</em> — the
-        legend, the myth, the person who somehow makes even the most
-        mundane Tuesday feel like an adventure.<br><br>
-        I hope this birthday is as brilliant, chaotic, and utterly
-        unforgettable as you are. You deserve every single good thing
-        the universe has to offer — and maybe a slice (or five) of cake.
-        🎂🍰🧁
-      </p>
-      <p class="signature">
-        Happy Birthday, Ali! 🥳🎉<br>
-        <span style="font-size:0.95rem; font-weight:400; color:#666;">
-          — Your friends who definitely didn't spend too long on this website
-        </span>
-      </p>
-    </div>
-
-    <!-- Footer -->
-    <footer id="chaos-footer">
-      Made with 💖, questionable CSS decisions, and zero regrets.
-    </footer>
-
-  </section><!-- /#chaos-page -->
-
-  <!-- Hidden confetti container (pieces appended to body dynamically) -->
+  <!-- Confetti container (unchanged) -->
   <div id="confetti-container" aria-hidden="true"></div>
 
   <script src="script.js"></script>

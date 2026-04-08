@@ -1,62 +1,9 @@
-// ==================== CONFIG ====================
-const CHALLENGE_TARGET = 15; // clicks needed to unlock heartfelt message
-let challengeCount = 0;
-let chaosStarted = false;
-let colorsActivated = false;
+'use strict';
 
-// ==================== DOM REFS ====================
-const introPage         = document.getElementById('intro-page');
-const chaosPage         = document.getElementById('chaos-page');
-const calmBtn           = document.getElementById('calm-btn');
-const dodgeBtn          = document.getElementById('dodge-btn');
-const airplaneBtn       = document.getElementById('airplane-btn');
-const challengeBtn      = document.getElementById('challenge-btn');
-const challengeCountEl  = document.getElementById('challenge-count');
-const challengeProgress = document.getElementById('challenge-progress');
-const progressBar       = document.getElementById('progress-bar');
-const heartfeltSection  = document.getElementById('heartfelt-section');
-const confettiContainer = document.getElementById('confetti-container');
-
-// ==================== INTRO → CHAOS ====================
-calmBtn.addEventListener('click', launchChaos);
-
-function launchChaos() {
-  if (chaosStarted) return;
-  chaosStarted = true;
-
-  introPage.style.transition = 'opacity 0.3s';
-  introPage.style.opacity = '0';
-
-  setTimeout(() => {
-    introPage.style.display = 'none';
-    // Show chaos page WITHOUT rainbow bg – colors activate later
-    chaosPage.classList.add('visible');
-
-    // Modest confetti to signal the page opened
-    launchConfettiBurst(40);
-    playFanfare();
-    initDodgeButton();
-  }, 350);
+// ==================== UTILS ====================
+function getTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-
-// ==================== FULL COLORFUL REVEAL ====================
-// Triggered by clicking the heartfelt section once it is visible
-function activateFullChaos() {
-  if (colorsActivated) return;
-  colorsActivated = true;
-
-  chaosPage.classList.add('chaos-bg');
-  heartfeltSection.classList.add('colors-activated');
-  heartfeltSection.style.cursor = 'default';
-
-  launchConfettiBurst(200);
-  playFanfare();
-}
-
-heartfeltSection.addEventListener('click', activateFullChaos);
-heartfeltSection.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') activateFullChaos();
-});
 
 // ==================== CONFETTI ====================
 const CONFETTI_COLORS = ['#ff4fa3','#ffe94f','#4ff0ff','#a84fff','#ff6b35','#7fff00'];
@@ -70,53 +17,50 @@ function launchConfettiBurst(count) {
 function spawnConfettiPiece() {
   const el = document.createElement('div');
   el.className = 'confetti-piece';
-  el.style.left = Math.random() * 100 + 'vw';
+  el.style.left            = Math.random() * 100 + 'vw';
   el.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
-  el.style.width  = (6 + Math.random() * 10) + 'px';
-  el.style.height = (6 + Math.random() * 10) + 'px';
-  el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-  const duration = 2.5 + Math.random() * 3;
-  el.style.animationDuration = duration + 's';
+  el.style.width           = (6 + Math.random() * 10) + 'px';
+  el.style.height          = (6 + Math.random() * 10) + 'px';
+  el.style.borderRadius    = Math.random() > 0.5 ? '50%' : '2px';
+  const dur = 2.5 + Math.random() * 3;
+  el.style.animationDuration = dur + 's';
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), duration * 1000 + 200);
+  setTimeout(() => el.remove(), dur * 1000 + 200);
 }
 
-// Ongoing confetti drizzle – stored so it can be cleared if needed
-const confettiInterval = setInterval(() => {
-  if (chaosStarted) spawnConfettiPiece();
-}, 300);
+// Gentle ongoing drizzle once chat is open
+let drizzleActive = false;
+const drizzleInterval = setInterval(() => {
+  if (drizzleActive) spawnConfettiPiece();
+}, 400);
 
 // ==================== INTERACTIVE CONFETTI ====================
-// Trail: small pieces left behind as the mouse moves
 let lastTrailTime = 0;
 document.addEventListener('mousemove', (e) => {
-  if (!chaosStarted) return;
+  if (!drizzleActive) return;
   const now = Date.now();
-  if (now - lastTrailTime < 40) return; // throttle to 25fps (browser timing may vary)
+  if (now - lastTrailTime < 40) return; // throttle to ~25fps
   lastTrailTime = now;
   spawnInteractiveConfetti(e.clientX, e.clientY, 'trail');
 });
 
-// Explosion: burst from click point (skip interactive elements)
 document.addEventListener('click', (e) => {
-  if (!chaosStarted) return;
-  if (e.target.closest('button, a, input, [role="button"]')) return;
-  for (let i = 0; i < 28; i++) {
-    spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
-  }
+  if (!drizzleActive) return;
+  if (e.target.closest('#wa-send-btn, #wa-tap-hint, #chat-challenge-btn, a, button')) return;
+  for (let i = 0; i < 22; i++) spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
   playPop();
 });
 
 function spawnInteractiveConfetti(x, y, type) {
-  const el = document.createElement('div');
+  const el   = document.createElement('div');
   el.className = `confetti-interact ${type}`;
   const size = (type === 'trail' ? 4 : 6) + Math.random() * 6;
-  el.style.width  = size + 'px';
-  el.style.height = size + 'px';
-  el.style.left   = x + 'px';
-  el.style.top    = y + 'px';
+  el.style.width           = size + 'px';
+  el.style.height          = size + 'px';
+  el.style.left            = x + 'px';
+  el.style.top             = y + 'px';
   el.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
-  el.style.borderRadius = Math.random() > 0.4 ? '50%' : '2px';
+  el.style.borderRadius    = Math.random() > 0.4 ? '50%' : '2px';
 
   if (type === 'explode') {
     const angle = Math.random() * Math.PI * 2;
@@ -126,180 +70,416 @@ function spawnInteractiveConfetti(x, y, type) {
     el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
     el.style.setProperty('--dur', (0.5 + Math.random() * 0.7) + 's');
   }
-
   document.body.appendChild(el);
-  const lifespan = type === 'trail' ? 700 : 1300;
-  setTimeout(() => el.remove(), lifespan);
+  setTimeout(() => el.remove(), type === 'trail' ? 700 : 1300);
 }
 
-// ==================== DODGE BUTTON ====================
-function initDodgeButton() {
-  dodgeBtn.style.left = '50%';
-  dodgeBtn.style.top  = '50%';
-}
-
-document.addEventListener('mousemove', (e) => {
-  if (!chaosStarted) return;
-
-  const btnRect = dodgeBtn.getBoundingClientRect();
-  const btnCx = btnRect.left + btnRect.width  / 2;
-  const btnCy = btnRect.top  + btnRect.height / 2;
-
-  const dx = e.clientX - btnCx;
-  const dy = e.clientY - btnCy;
-  const dist = Math.hypot(dx, dy);
-  const FLEE_RADIUS = 140;
-
-  if (dist < FLEE_RADIUS) {
-    const flee = FLEE_RADIUS - dist;
-    const angle = Math.atan2(dy, dx);
-    let newX = btnRect.left - Math.cos(angle) * flee;
-    let newY = btnRect.top  - Math.sin(angle) * flee;
-
-    newX = Math.max(10, Math.min(window.innerWidth  - btnRect.width  - 10, newX));
-    newY = Math.max(10, Math.min(window.innerHeight - btnRect.height - 10, newY));
-
-    dodgeBtn.style.left = newX + 'px';
-    dodgeBtn.style.top  = newY + 'px';
-    dodgeBtn.style.transition = 'left 0.15s, top 0.15s';
-  }
-});
-
-dodgeBtn.addEventListener('click', () => {
-  playPop();
-  showToast('😱 You caught me! Here, have a virtual cupcake 🧁');
-  launchConfettiBurst(30);
-});
-
-// Touch / mobile dodge
-document.addEventListener('touchmove', (e) => {
-  const touch = e.touches[0];
-  document.dispatchEvent(new MouseEvent('mousemove', {
-    clientX: touch.clientX,
-    clientY: touch.clientY
-  }));
-}, { passive: true });
-
-// ==================== AIRPLANE ====================
-airplaneBtn.addEventListener('click', () => {
-  airplaneBtn.classList.add('launching');
-  playFanfare();
-
-  // Navigate to map page after launch animation completes (1.2s)
-  setTimeout(() => {
-    window.location.href = 'map.html';
-  }, 1100);
-});
-
-// ==================== CHALLENGE BUTTON ====================
-challengeBtn.addEventListener('click', () => {
-  if (challengeCount >= CHALLENGE_TARGET) return;
-  challengeCount++;
-  const pct = (challengeCount / CHALLENGE_TARGET) * 100;
-
-  challengeCountEl.textContent = challengeCount;
-  progressBar.style.width = pct + '%';
-  challengeProgress.textContent =
-    challengeCount < CHALLENGE_TARGET
-      ? `${CHALLENGE_TARGET - challengeCount} more click${CHALLENGE_TARGET - challengeCount !== 1 ? 's' : ''} to go...`
-      : '';
-
-  playPop();
-  launchConfettiBurst(8);
-
-  if (challengeCount >= CHALLENGE_TARGET) {
-    unlockHeartfelt();
-  }
-});
-
-function unlockHeartfelt() {
-  challengeBtn.disabled = true;
-  challengeBtn.textContent = '🎉 UNLOCKED!';
-
-  setTimeout(() => {
-    heartfeltSection.classList.add('visible');
-    heartfeltSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    launchConfettiBurst(80);
-    playFanfare();
-  }, 600);
-}
-
-// ==================== WEB AUDIO SOUNDS ====================
+// ==================== WEB AUDIO ====================
 let audioCtx = null;
-
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-
-function playTone(frequency, type, duration, startTime, gainVal = 0.3) {
-  if (gainVal <= 0) return;
-  const ctx = getAudioCtx();
-  const osc  = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.type = type;
-  osc.frequency.setValueAtTime(frequency, startTime);
-  gain.gain.setValueAtTime(gainVal, startTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-  osc.start(startTime);
-  osc.stop(startTime + duration);
-}
-
-function playPop() {
+function playTone(freq, type, duration, start, gain = 0.28) {
+  if (gain <= 0) return;
   const ctx  = getAudioCtx();
-  const now  = ctx.currentTime;
-  playTone(600, 'sine', 0.1, now, 0.4);
-  playTone(900, 'sine', 0.08, now + 0.05, 0.3);
+  const osc  = ctx.createOscillator();
+  const vol  = ctx.createGain();
+  osc.connect(vol); vol.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  vol.gain.setValueAtTime(gain, start);
+  vol.gain.exponentialRampToValueAtTime(0.001, start + duration);
+  osc.start(start); osc.stop(start + duration);
 }
-
+function playPop() {
+  const ctx = getAudioCtx(), now = ctx.currentTime;
+  playTone(600, 'sine', 0.1, now, 0.35);
+  playTone(900, 'sine', 0.08, now + 0.05, 0.25);
+}
 function playFanfare() {
-  const ctx = getAudioCtx();
-  const now = ctx.currentTime;
-  const notes = [523, 659, 784, 1047, 784, 1047]; // C5 E5 G5 C6 G5 C6
-  notes.forEach((freq, i) => playTone(freq, 'square', 0.18, now + i * 0.12, 0.25));
+  const ctx = getAudioCtx(), now = ctx.currentTime;
+  [523, 659, 784, 1047, 784, 1047].forEach((f, i) =>
+    playTone(f, 'square', 0.18, now + i * 0.12, 0.22));
+}
+// WhatsApp-style message received "ding"
+function playDing() {
+  const ctx = getAudioCtx(), now = ctx.currentTime;
+  playTone(880, 'sine', 0.15, now, 0.18);
+  playTone(1100, 'sine', 0.1, now + 0.07, 0.12);
 }
 
-// Random silly sound on emoji click
-document.querySelectorAll('.emoji-ring span').forEach(el => {
-  el.style.cursor = 'pointer';
-  el.addEventListener('click', () => {
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    const freq = 200 + Math.random() * 800;
-    playTone(freq, ['sine','square','sawtooth'][Math.floor(Math.random()*3)], 0.3, now, 0.4);
-    launchConfettiBurst(15);
-  });
-});
-
-// ==================== TOAST NOTIFICATIONS ====================
+// ==================== TOAST ====================
 function showToast(msg) {
-  const toast = document.createElement('div');
-  toast.textContent = msg;
-  Object.assign(toast.style, {
-    position: 'fixed',
-    bottom: '2rem',
-    left: '50%',
-    transform: 'translateX(-50%) translateY(20px)',
-    background: 'rgba(0,0,0,0.85)',
-    color: '#fff',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '999px',
-    fontSize: '1rem',
-    zIndex: '99999',
-    opacity: '0',
-    transition: 'opacity 0.3s, transform 0.3s',
-    maxWidth: '90vw',
-    textAlign: 'center'
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '5rem', left: '50%',
+    transform: 'translateX(-50%) translateY(14px)',
+    background: 'rgba(0,0,0,0.85)', color: '#fff',
+    padding: '0.65rem 1.4rem', borderRadius: '99px',
+    fontSize: '0.95rem', zIndex: '99999',
+    opacity: '0', transition: 'opacity 0.3s, transform 0.3s',
+    maxWidth: '90vw', textAlign: 'center', pointerEvents: 'none',
   });
-  document.body.appendChild(toast);
+  document.body.appendChild(t);
   requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
+    t.style.opacity   = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
   });
   setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 400);
+    t.style.opacity = '0';
+    setTimeout(() => t.remove(), 400);
   }, 3000);
 }
+
+// ==================== MESSAGE TEMPLATES ====================
+function mkChessHTML() {
+  return `<span class="chess-card-board">♟ ♔ ♛ ♜ ♝ ♞</span>
+    <strong style="display:block;margin:0.35rem 0 0.2rem;">We made you a chess game 🎮</strong>
+    <div style="font-size:0.82rem;color:var(--wa-text-dim);margin-bottom:0.6rem;">Two players · pass the device · zero regrets 😄</div>
+    <a href="chess.html" class="chat-card-btn chess-btn">♟️ Open Chess</a>`;
+}
+
+function mkBirthdayHTML() {
+  return `🎂🎉<br>HAPPY BIRTHDAY,<br>ALI!!<br>🎉🎂`;
+}
+
+function mkJokeHTML(emoji, tag, body) {
+  return `<span class="joke-emoji">${emoji}</span>
+    <strong style="color:var(--secondary);display:block;margin:0.15rem 0 0.35rem;">${tag}</strong>
+    <span style="font-size:0.9rem;">${body}</span>`;
+}
+
+function mkPlaneHTML() {
+  return `<div style="font-size:0.85rem;color:var(--wa-text-dim);margin-bottom:0.3rem;">
+      this plane is flying to Katowice. yes, really 😂
+    </div>
+    <a href="map.html" class="chat-plane" title="See Ali's journey">✈️</a>
+    <div style="font-size:0.72rem;color:var(--wa-text-dim);margin-top:0.15rem;">tap the plane ↑</div>`;
+}
+
+function mkChallengeHTML() {
+  return `<div class="challenge-header">🔒 Unlock Ali's Secret Message</div>
+    <p style="font-size:0.82rem;color:var(--wa-text-dim);margin:0.35rem 0 0.65rem;">
+      Click <strong style="color:var(--secondary)">15&nbsp;times</strong>
+      to unlock. No shortcuts. Pure dedication.
+    </p>
+    <span id="chat-challenge-count">0</span>
+    <div id="chat-progress-wrap"><div id="chat-progress-bar"></div></div>
+    <p id="chat-challenge-progress">15 clicks to go…</p>
+    <button id="chat-challenge-btn">💖 Click for Ali</button>`;
+}
+
+function mkHeartfeltHTML() {
+  return `<h3>🎂 For Ali, with love 🎂</h3>
+    <p>Okay, the chaos is over — for a second. 🙂<br><br>
+    In all seriousness, you are one of the most genuinely kind,
+    hilariously funny, and wonderfully weird people I know.
+    Every moment with you turns into a story worth retelling
+    (sometimes against our will 😂).<br><br>
+    You bring so much light and laughter into the lives of everyone
+    around you, and today we get to celebrate <em>you</em> — the
+    legend, the myth, the person who somehow makes even the most
+    mundane Tuesday feel like an adventure.<br><br>
+    I hope this birthday is as brilliant, chaotic, and utterly
+    unforgettable as you are. You deserve every single good thing
+    the universe has to offer — and maybe a slice (or five) of cake.
+    🎂🍰🧁</p>
+    <p class="heartfelt-sig">
+      Happy Birthday, Ali! 🥳🎉<br>
+      <span>— Your friends who definitely didn't spend too long on this</span>
+    </p>`;
+}
+
+// ==================== MESSAGE SCRIPT ====================
+// Each beat is one of:
+//   { type:'preload', ... }   — shown instantly when chat opens
+//   { type:'delay',  ms }     — pause before continuing
+//   { type:'msg',    ... }    — show typing indicator then append bubble
+//   { type:'gate',   label }  — pause until user taps the input bar
+const SCRIPT = [
+  // ---- Pre-existing messages (already "sent" earlier today) ----
+  { type:'preload', bubbleClass:'',           text:'hey!! 👀 we made you something...',         time:'10:29 AM' },
+  { type:'preload', bubbleClass:'chess-bubble', html:mkChessHTML(),                              time:'10:31 AM' },
+  { type:'preload', bubbleClass:'',           text:'let us know when you see this 😏',          time:'10:31 AM' },
+
+  { type:'delay', ms: 1400 },
+
+  // ---- Phase 1: calm intro (auto-play) ----
+  { type:'msg', text:'Hey, Ali... 👀',                                                           typing: 850  },
+  { type:'msg', text:'I just wanted to take a quiet moment to pass along...',                   typing: 1600 },
+  { type:'msg', text:'a small, totally normal, completely ordinary message. 😇',                typing: 1250 },
+  { type:'msg', text:'absolutely nothing unusual here. nope. 🙃',                              typing: 1000 },
+  { type:'msg', text:'...are you ready? 🤔',                                                    typing: 850  },
+
+  { type:'gate', label:'Tap to open 📩' },
+
+  // ---- Phase 2: birthday reveal ----
+  { type:'msg', bubbleClass:'birthday-bubble', html:mkBirthdayHTML(),                           typing:2200,
+    onShow: () => { launchConfettiBurst(120); playFanfare(); } },
+  { type:'msg', text:'You absolute legend!! You made it another year without being launched into the sun 🌞', typing:1800 },
+  { type:'msg', text:'🎈🎊🎉🦄🚀🎂🥳🎉🎊🎈',                                                  typing: 700  },
+  { type:'msg', text:'We brought the whole crew to celebrate 🥳',                              typing:1000  },
+
+  { type:'gate', label:'Tap for the receipts 😬' },
+
+  // ---- Phase 3: jokes ----
+  { type:'msg', bubbleClass:'joke-bubble',
+    html: mkJokeHTML('🤣','JOKE_A',
+      'Remember the time you tried to <strong>[JOKE_A: insert the legendary story here]</strong>? '
+    + 'To this day nobody has fully recovered. Scientists are still studying it.'),
+    typing: 1300 },
+
+  { type:'gate', label:'Next one 👀' },
+
+  { type:'msg', bubbleClass:'joke-bubble',
+    html: mkJokeHTML('😬','JOKE_B',
+      'Nobody will EVER forget <strong>[JOKE_B: the incident with the thing at the place]</strong>. '
+    + 'Historians will call it "the event". You know what you did.'),
+    typing: 1400 },
+
+  { type:'gate', label:"Oh no, there's more..." },
+
+  { type:'msg', bubbleClass:'joke-bubble',
+    html: mkJokeHTML('💀','JOKE_C',
+      'And of course, who could overlook <strong>[JOKE_C: that one phrase you always say]</strong>? '
+    + "It's been said approximately 4,000 times. Merch incoming."),
+    typing: 1200 },
+
+  { type:'msg', bubbleClass:'joke-bubble',
+    html: mkJokeHTML('🏆','JOKE_D',
+      'Special award to Ali for <strong>[JOKE_D: that impressive/embarrassing achievement]</strong>. '
+    + 'Frame it. Put it on a resumé. Own it.'),
+    typing: 1300 },
+
+  { type:'gate', label:'One more thing... ✈️' },
+
+  // ---- Phase 4: airplane ----
+  { type:'msg', text:'oh also btw...',                                                           typing: 600 },
+  { type:'msg', bubbleClass:'plane-bubble', html:mkPlaneHTML(),                                 typing:1050 },
+
+  { type:'gate', label:'Unlock your birthday gift 🎁' },
+
+  // ---- Phase 5: challenge (heartfelt is unlocked programmatically after) ----
+  { type:'msg', bubbleClass:'challenge-bubble', html:mkChallengeHTML(),                         typing:1500 },
+];
+
+// ==================== CHAT ENGINE ====================
+let qIdx     = 0;
+let gateOpen = false;
+let busy     = false;
+
+const chatEl   = document.getElementById('chat-messages');
+const winEl    = document.getElementById('chat-window');
+const tapEl    = document.getElementById('wa-tap-hint');
+const sendEl   = document.getElementById('wa-send-btn');
+const typingEl = document.getElementById('typing-indicator');
+const statusEl = document.getElementById('wa-header-status');
+
+function scrollBottom() {
+  winEl.scrollTo({ top: winEl.scrollHeight, behavior: 'smooth' });
+}
+
+function showTyping() {
+  typingEl.style.display = 'flex';
+  statusEl.textContent   = 'typing...';
+  scrollBottom();
+}
+
+function hideTyping() {
+  typingEl.style.display = 'none';
+  statusEl.textContent   = 'online';
+}
+
+function buildBubble(beat, timeStr) {
+  const wrap   = document.createElement('div');
+  wrap.className = 'wa-msg received';
+
+  const bubble = document.createElement('div');
+  bubble.className = `wa-bubble ${beat.bubbleClass || ''}`;
+
+  if (beat.html) {
+    bubble.innerHTML = beat.html;
+  } else {
+    bubble.textContent = beat.text || '';
+  }
+
+  const ts = document.createElement('span');
+  ts.className   = 'wa-time';
+  ts.textContent = timeStr;
+  bubble.appendChild(ts);
+
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
+function appendMsg(beat) {
+  const el = buildBubble(beat, beat.time || getTime());
+  chatEl.insertBefore(el, typingEl);
+  scrollBottom();
+  playDing();
+  if (beat.onShow) beat.onShow();
+  if (beat.bubbleClass === 'challenge-bubble') initChallenge();
+  return el;
+}
+
+function setGate(label) {
+  gateOpen = true;
+  tapEl.textContent = label || 'Tap to continue...';
+  tapEl.classList.add('active-hint');
+  sendEl.classList.remove('locked');
+}
+
+function clearGate() {
+  gateOpen = false;
+  tapEl.textContent = 'Type a message';
+  tapEl.classList.remove('active-hint');
+  sendEl.classList.add('locked');
+}
+
+function advance() {
+  if (busy || qIdx >= SCRIPT.length) return;
+
+  const beat = SCRIPT[qIdx++];
+
+  if (beat.type === 'preload') {
+    appendMsg(beat);
+    advance();
+    return;
+  }
+
+  if (beat.type === 'delay') {
+    setTimeout(advance, beat.ms || 1000);
+    return;
+  }
+
+  if (beat.type === 'gate') {
+    setGate(beat.label);
+    return;
+  }
+
+  if (beat.type === 'msg') {
+    busy = true;
+    sendEl.classList.add('locked');
+    showTyping();
+    setTimeout(() => {
+      hideTyping();
+      appendMsg(beat);
+      busy = false;
+      // Immediately advance to see if next is gate/delay/another msg
+      const next = SCRIPT[qIdx];
+      if (!next) return;
+      if (next.type === 'msg') {
+        setTimeout(advance, 280);
+      } else {
+        advance();
+      }
+    }, beat.typing || 1000);
+  }
+}
+
+function handleTap() {
+  if (!gateOpen || busy) return;
+  clearGate();
+  playPop();
+  advance();
+}
+
+tapEl.addEventListener('click',   handleTap);
+sendEl.addEventListener('click',  handleTap);
+tapEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); }
+});
+
+// ==================== CHALLENGE ====================
+let challengeCount = 0;
+let challengeDone  = false;
+
+function initChallenge() {
+  const btn = document.getElementById('chat-challenge-btn');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    if (challengeDone) return;
+    challengeCount++;
+
+    const countEl    = document.getElementById('chat-challenge-count');
+    const barEl      = document.getElementById('chat-progress-bar');
+    const progressEl = document.getElementById('chat-challenge-progress');
+
+    countEl.textContent = challengeCount;
+    barEl.style.width   = (challengeCount / 15 * 100) + '%';
+
+    for (let i = 0; i < 10; i++) spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
+    playPop();
+
+    if (challengeCount >= 15) {
+      challengeDone = true;
+      progressEl.textContent = '🎉 Unlocked!';
+      btn.disabled    = true;
+      btn.textContent = '✅ Done!';
+      setTimeout(revealHeartfelt, 900);
+    } else {
+      const rem = 15 - challengeCount;
+      progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
+    }
+  });
+}
+
+function revealHeartfelt() {
+  showTyping();
+  statusEl.textContent = 'typing...';
+  setTimeout(() => {
+    hideTyping();
+    const wrap   = document.createElement('div');
+    wrap.className = 'wa-msg received';
+    const bubble = document.createElement('div');
+    bubble.className = 'wa-bubble heartfelt-bubble';
+    bubble.innerHTML = mkHeartfeltHTML();
+    const ts = document.createElement('span');
+    ts.className   = 'wa-time';
+    ts.textContent = getTime();
+    bubble.appendChild(ts);
+    wrap.appendChild(bubble);
+    chatEl.insertBefore(wrap, typingEl);
+    scrollBottom();
+    launchConfettiBurst(80);
+    playFanfare();
+  }, 1800);
+}
+
+// ==================== LOADING SCREEN ====================
+function runLoadingBar() {
+  const bar = document.getElementById('wa-load-progress');
+  let pct   = 0;
+  const iv  = setInterval(() => {
+    pct += Math.random() * 18 + 4;
+    if (pct > 100) pct = 100;
+    bar.style.width = pct + '%';
+    if (pct >= 100) {
+      clearInterval(iv);
+      setTimeout(openChat, 500);
+    }
+  }, 160);
+}
+
+function openChat() {
+  const loading = document.getElementById('wa-loading');
+  const app     = document.getElementById('wa-app');
+
+  loading.classList.add('fade-out');
+  setTimeout(() => {
+    loading.style.display = 'none';
+    app.removeAttribute('aria-hidden');
+    app.classList.add('visible');
+    drizzleActive = true;
+    // Give the UI a moment to render before starting messages
+    setTimeout(advance, 500);
+  }, 580);
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  clearGate();
+  runLoadingBar();
+});
