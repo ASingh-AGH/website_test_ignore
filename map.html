@@ -807,6 +807,8 @@
     const mapContent = document.getElementById('map-content');
 
     function unlockMap() {
+      // NOTE: This password is intentionally stored client-side — it's a fun
+      // interactive gate, not a security mechanism. The hint reveals the answer.
       const answer = pwInput.value.trim().toLowerCase();
       if (answer === 'katowice') {
         pwScreen.setAttribute('hidden', '');
