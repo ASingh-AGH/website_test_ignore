@@ -200,18 +200,16 @@ function mkHeartfeltHTML() {
 //   { type:'gate',   label }  — pause until user taps the input bar
 const SCRIPT = [
   // ---- Pre-existing messages (already "sent" earlier today) ----
-  { type:'preload', bubbleClass:'',           text:'hey!! 👀 we made you something...',         time:'10:29 AM' },
+  { type:'preload', bubbleClass:'',           text:'happy birthday',         time:'10:29 AM' },
   { type:'preload', bubbleClass:'chess-bubble', html:mkChessHTML(),                              time:'10:31 AM' },
-  { type:'preload', bubbleClass:'',           text:'let us know when you see this 😏',          time:'10:31 AM' },
+  { type:'preload', bubbleClass:'',           text:':)))))',          time:'10:31 AM' },
 
   { type:'delay', ms: 1400 },
 
   // ---- Phase 1: calm intro (auto-play) ----
-  { type:'msg', text:'Hey, Ali... 👀',                                                           typing: 850  },
-  { type:'msg', text:'I just wanted to take a quiet moment to pass along...',                   typing: 1600 },
-  { type:'msg', text:'a small, totally normal, completely ordinary message. 😇',                typing: 1250 },
-  { type:'msg', text:'absolutely nothing unusual here. nope. 🙃',                              typing: 1000 },
-  { type:'msg', text:'...are you ready? 🤔',                                                    typing: 850  },
+  { type:'msg', text:'Since you are unable to stop reading my mind',                                                           typing: 850  },
+  { type:'msg', text:'You somehow already guessed that your birthday present is this website',                   typing: 1600 },
+  { type:'msg', text:'bet you didnt think it would be an actual whatsapp message 😂',                typing: 1250 },
 
   { type:'gate', label:'Tap to open 📩' },
 
