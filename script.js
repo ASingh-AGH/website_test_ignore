@@ -139,9 +139,16 @@ const STICKER_AFTER_BET = 'https://github.com/user-attachments/assets/d14a392f-0
 const STICKER_END_1     = 'https://github.com/user-attachments/assets/defd0182-a554-49e9-93d9-e1cb6c261ad3';
 const STICKER_END_2     = 'https://github.com/user-attachments/assets/c2ef7183-c644-40ca-9ba3-e1e8f029cf87';
 
-// mkStickerHTML — builds sticker bubble content from a hardcoded URL constant (not user input)
+// mkStickerHTML — builds sticker img tag from a hardcoded URL constant (never user input).
+// Using createElement instead of string interpolation avoids any future XSS risk
+// if the src value were ever made dynamic.
 function mkStickerHTML(url) {
-  return `<img class="sticker-img" src="${url}" alt="sticker" loading="lazy">`;
+  const img = document.createElement('img');
+  img.className = 'sticker-img';
+  img.src       = url;
+  img.alt       = 'sticker';
+  img.loading   = 'lazy';
+  return img.outerHTML;
 }
 
 // ==================== MESSAGE TEMPLATES ====================
@@ -416,8 +423,8 @@ function launchFlyingPlane() {
   plane.removeAttribute('hidden');
   showToast('✈️ Catch the plane to see the map!');
 
-  let x  = Math.random() * Math.max(50, window.innerWidth  - 80);
-  let y  = 80 + Math.random() * Math.max(50, window.innerHeight - 180);
+  let x  = Math.random() * Math.max(1, window.innerWidth  - 80);
+  let y  = 80 + Math.random() * Math.max(1, window.innerHeight - 180);
   let vx = (Math.random() < 0.5 ? 1 : -1) * (9 + Math.random() * 7);
   let vy = (Math.random() < 0.5 ? 1 : -1) * (6 + Math.random() * 6);
 
@@ -554,7 +561,9 @@ function buildHeartfeltWrap() {
   return wrap;
 }
 
-// Builds a sticker wrap element from a hardcoded URL constant (not user input)
+// Builds a sticker wrap element from a hardcoded URL constant.
+// The url parameter is always one of STICKER_END_1 / STICKER_END_2 —
+// it is never sourced from sessionStorage or user input, so img.src is safe.
 function buildStickerWrap(url) {
   const wrap   = document.createElement('div');
   wrap.className = 'wa-msg received';
