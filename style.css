@@ -298,6 +298,26 @@ body {
 /* ---- Airplane ---- */
 .wa-bubble.plane-bubble { background: var(--wa-received); }
 
+/* ---- Sticker (no bubble background) ---- */
+.wa-bubble.sticker-bubble {
+  background: transparent;
+  padding: 0.15rem 0 1.35rem;
+  border: none;
+  box-shadow: none;
+}
+.wa-bubble.sticker-bubble::before { display: none; }
+.wa-msg.received .wa-bubble.sticker-bubble::before { display: none; }
+
+.sticker-img {
+  display: block;
+  max-width: 160px;
+  max-height: 160px;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+}
+
 .chat-plane {
   font-size: 3.8rem;
   line-height: 1;
@@ -561,6 +581,33 @@ body {
 
 .confetti-interact.trail   { animation: confetti-trail 0.7s ease-out forwards; }
 .confetti-interact.explode { animation: confetti-explode var(--dur, 0.9s) ease-out forwards; }
+
+/* ==================== FLYING PLANE OVERLAY ==================== */
+#flying-plane {
+  position: fixed;
+  font-size: 2.8rem;
+  line-height: 1;
+  z-index: 8888;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+  will-change: left, top, transform;
+  filter: drop-shadow(0 2px 10px rgba(0,168,132,0.5));
+  transition: filter 0.4s;
+}
+#flying-plane[hidden] { display: none !important; }
+
+#flying-plane.plane-ready {
+  pointer-events: auto;
+  cursor: pointer;
+  filter: drop-shadow(0 0 18px rgba(0,168,132,0.95));
+  animation: planePulse 0.75s ease-in-out infinite alternate;
+}
+
+@keyframes planePulse {
+  from { transform: scale(1)    rotate(-10deg); }
+  to   { transform: scale(1.22) rotate(-10deg); }
+}
 
 /* ==================== ANIMATIONS ==================== */
 /* Suppress pop-in animation when restoring saved messages */

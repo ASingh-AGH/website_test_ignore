@@ -133,6 +133,17 @@ function showToast(msg) {
   }, 3000);
 }
 
+// ==================== STICKER ASSETS ====================
+const STICKER_AFTER_HI  = 'https://github.com/user-attachments/assets/847194f1-748a-4dfa-9ca0-f5328ce6ecf7';
+const STICKER_AFTER_BET = 'https://github.com/user-attachments/assets/d14a392f-0828-4423-8d50-cc61574e3d60';
+const STICKER_END_1     = 'https://github.com/user-attachments/assets/defd0182-a554-49e9-93d9-e1cb6c261ad3';
+const STICKER_END_2     = 'https://github.com/user-attachments/assets/c2ef7183-c644-40ca-9ba3-e1e8f029cf87';
+
+// mkStickerHTML — builds sticker bubble content from a hardcoded URL constant (not user input)
+function mkStickerHTML(url) {
+  return `<img class="sticker-img" src="${url}" alt="sticker" loading="lazy">`;
+}
+
 // ==================== MESSAGE TEMPLATES ====================
 function mkChessHTML() {
   return `<span class="chess-card-board">♟ ♔ ♛ ♜ ♝ ♞</span>
@@ -152,11 +163,12 @@ function mkJokeHTML(emoji, tag, body) {
 }
 
 function mkPlaneHTML() {
-  return `<div style="font-size:0.85rem;color:var(--wa-text-dim);margin-bottom:0.3rem;">
+  return `<div style="font-size:0.85rem;color:var(--wa-text-dim);margin-bottom:0.25rem;">
       this plane is flying to Katowice. yes, really 😂
     </div>
-    <a href="map.html" class="chat-plane" title="See Ali's journey">✈️</a>
-    <div style="font-size:0.72rem;color:var(--wa-text-dim);margin-top:0.15rem;">tap the plane ↑</div>`;
+    <div style="font-size:0.82rem;color:var(--wa-green);margin-top:0.15rem;">
+      ✈️ catch the plane flying around your screen!
+    </div>`;
 }
 
 function mkChallengeHTML() {
@@ -200,9 +212,10 @@ function mkHeartfeltHTML() {
 //   { type:'gate',   label }  — pause until user taps the input bar
 const SCRIPT = [
   // ---- Pre-existing messages (already "sent" earlier today) ----
-  { type:'preload', bubbleClass:'',           text:'happy birthday',         time:'10:29 AM' },
-  { type:'preload', bubbleClass:'chess-bubble', html:mkChessHTML(),                              time:'10:31 AM' },
-  { type:'preload', bubbleClass:'',           text:':)))))',          time:'10:31 AM' },
+  { type:'preload', bubbleClass:'',           text:'hi 👋',                                                          time:'10:28 AM' },
+  { type:'preload', bubbleClass:'sticker-bubble', html:mkStickerHTML(STICKER_AFTER_HI),                               time:'10:29 AM' },
+  { type:'preload', bubbleClass:'chess-bubble', html:mkChessHTML(),                                                    time:'10:31 AM' },
+  { type:'preload', bubbleClass:'',           text:':)))))',                                                            time:'10:31 AM' },
 
   { type:'delay', ms: 1400 },
 
@@ -210,6 +223,7 @@ const SCRIPT = [
   { type:'msg', text:'Since you are unable to stop reading my mind',                                                           typing: 850  },
   { type:'msg', text:'You somehow already guessed that your birthday present is this website',                   typing: 1600 },
   { type:'msg', text:'bet you didnt think it would be an actual whatsapp message 😂',                typing: 1250 },
+  { type:'msg', bubbleClass:'sticker-bubble', html:mkStickerHTML(STICKER_AFTER_BET),                 typing: 800  },
 
   { type:'gate', label:'Tap to open 📩' },
 
@@ -255,7 +269,8 @@ const SCRIPT = [
 
   // ---- Phase 4: airplane ----
   { type:'msg', text:'oh also btw...',                                                           typing: 600 },
-  { type:'msg', bubbleClass:'plane-bubble', html:mkPlaneHTML(),                                 typing:1050 },
+  { type:'msg', bubbleClass:'plane-bubble', html:mkPlaneHTML(),                                 typing:1050,
+    onShow: () => launchFlyingPlane() },
 
   { type:'gate', label:'Unlock your birthday gift 🎁' },
 
@@ -390,6 +405,84 @@ tapEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); }
 });
 
+// ==================== FLYING PLANE ====================
+let planeActive = false; // prevent relaunching
+
+function launchFlyingPlane() {
+  const plane = document.getElementById('flying-plane');
+  if (!plane || planeActive) return;
+  planeActive = true;
+
+  plane.removeAttribute('hidden');
+  showToast('✈️ Catch the plane to see the map!');
+
+  let x  = Math.random() * Math.max(50, window.innerWidth  - 80);
+  let y  = 80 + Math.random() * Math.max(50, window.innerHeight - 180);
+  let vx = (Math.random() < 0.5 ? 1 : -1) * (9 + Math.random() * 7);
+  let vy = (Math.random() < 0.5 ? 1 : -1) * (6 + Math.random() * 6);
+
+  plane.style.left = x + 'px';
+  plane.style.top  = y + 'px';
+
+  let rafId     = null;
+  let startTime = null;
+  const CHAOS_MS = 5500;
+  const SLOW_MS  = 2000;
+
+  function animPlane(ts) {
+    if (!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+
+    if (elapsed < CHAOS_MS) {
+      // Chaotic phase — random direction nudges
+      if (Math.random() < 0.06) {
+        vx += (Math.random() - 0.5) * 12;
+        vy += (Math.random() - 0.5) * 12;
+      }
+      const spd = Math.hypot(vx, vy);
+      if (spd > 16) { vx = vx / spd * 16; vy = vy / spd * 16; }
+      if (spd < 7)  { vx = vx / spd * 7;  vy = vy / spd * 7;  }
+    } else if (elapsed < CHAOS_MS + SLOW_MS) {
+      // Decelerate toward viewport centre
+      const t  = (elapsed - CHAOS_MS) / SLOW_MS;
+      const cx = window.innerWidth  / 2 - 30;
+      const cy = window.innerHeight / 2 - 30;
+      vx = vx * 0.90 + (cx - x) * 0.018 * t;
+      vy = vy * 0.90 + (cy - y) * 0.018 * t;
+    } else {
+      // Arrived — hover + make clickable
+      plane.classList.add('plane-ready');
+      showToast('✈️ Tap the plane to see the map!');
+      return; // stop RAF
+    }
+
+    // Bounce off screen edges (leave room for header)
+    const W = window.innerWidth, H = window.innerHeight;
+    if (x < 8)      { x = 8;      vx =  Math.abs(vx); }
+    if (x > W - 68) { x = W - 68; vx = -Math.abs(vx); }
+    if (y < 64)     { y = 64;     vy =  Math.abs(vy); }
+    if (y > H - 72) { y = H - 72; vy = -Math.abs(vy); }
+
+    x += vx;
+    y += vy;
+
+    const angle = Math.atan2(vy, vx) * 180 / Math.PI;
+    plane.style.left      = x + 'px';
+    plane.style.top       = y + 'px';
+    plane.style.transform = `rotate(${angle}deg)`;
+
+    rafId = requestAnimationFrame(animPlane);
+  }
+
+  rafId = requestAnimationFrame(animPlane);
+
+  // Navigate to map when the plane is ready and tapped
+  plane.addEventListener('click', () => {
+    if (!plane.classList.contains('plane-ready')) return;
+    saveState();
+    window.location.href = 'map.html';
+  });
+}
 // ==================== STATE PERSISTENCE ====================
 // State is saved to sessionStorage only when the user explicitly navigates to
 // map.html or chess.html.  The wa_return flag is the guard: it is set on that
@@ -402,7 +495,6 @@ tapEl.addEventListener('keydown', e => {
 // functions — no external HTML ever enters innerHTML.
 
 function saveState() {
-  // Collect indices of beats that have already been rendered (preload/msg only)
   const renderedIdxs = [];
   for (let i = 0; i < qIdx; i++) {
     const t = SCRIPT[i].type;
@@ -412,6 +504,7 @@ function saveState() {
   sessionStorage.setItem('wa_state', JSON.stringify({
     renderedIdxs,
     heartfeltShown,
+    endStickersShown,
     qIdx,
     gateOpen,
     gateLabel:      gateOpen ? tapEl.textContent : null,
@@ -461,6 +554,26 @@ function buildHeartfeltWrap() {
   return wrap;
 }
 
+// Builds a sticker wrap element from a hardcoded URL constant (not user input)
+function buildStickerWrap(url) {
+  const wrap   = document.createElement('div');
+  wrap.className = 'wa-msg received';
+  const bubble = document.createElement('div');
+  bubble.className = 'wa-bubble sticker-bubble';
+  const img = document.createElement('img');
+  img.className = 'sticker-img';
+  img.src       = url;   // hardcoded constant — not from sessionStorage
+  img.alt       = 'sticker';
+  img.loading   = 'lazy';
+  bubble.appendChild(img);
+  const ts = document.createElement('span');
+  ts.className   = 'wa-time';
+  ts.textContent = getTime();
+  bubble.appendChild(ts);
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
 function loadState() {
   if (sessionStorage.getItem('wa_return') !== '1') return false;
   const raw = sessionStorage.getItem('wa_state');
@@ -470,10 +583,11 @@ function loadState() {
   let s;
   try { s = JSON.parse(raw); } catch (e) { return false; }
 
-  qIdx           = s.qIdx           || 0;
-  challengeCount = s.challengeCount || 0;
-  challengeDone  = s.challengeDone  || false;
-  heartfeltShown = s.heartfeltShown || false;
+  qIdx              = s.qIdx              || 0;
+  challengeCount    = s.challengeCount    || 0;
+  challengeDone     = s.challengeDone     || false;
+  heartfeltShown    = s.heartfeltShown    || false;
+  endStickersShown  = s.endStickersShown  || 0;
 
   // Re-render saved beats without pop-in animation
   chatEl.classList.add('restore-mode');
@@ -488,6 +602,9 @@ function loadState() {
 
   if (heartfeltShown) {
     chatEl.insertBefore(buildHeartfeltWrap(), typingEl);
+    // Restore end stickers that had appeared after the heartfelt
+    if (endStickersShown >= 1) chatEl.insertBefore(buildStickerWrap(STICKER_END_1), typingEl);
+    if (endStickersShown >= 2) chatEl.insertBefore(buildStickerWrap(STICKER_END_2), typingEl);
   }
 
   requestAnimationFrame(() => chatEl.classList.remove('restore-mode'));
@@ -509,9 +626,10 @@ function loadState() {
 }
 
 // ==================== CHALLENGE ====================
-let challengeCount = 0;
-let challengeDone  = false;
-let heartfeltShown = false;
+let challengeCount    = 0;
+let challengeDone     = false;
+let heartfeltShown    = false;
+let endStickersShown  = 0;
 
 function initChallenge() {
   const btn = document.getElementById('chat-challenge-btn');
@@ -553,6 +671,19 @@ function revealHeartfelt() {
     scrollBottom();
     launchConfettiBurst(80);
     playFanfare();
+    // End stickers appear shortly after the heartfelt message
+    setTimeout(() => {
+      endStickersShown = 1;
+      chatEl.insertBefore(buildStickerWrap(STICKER_END_1), typingEl);
+      scrollBottom();
+      playDing();
+    }, 1600);
+    setTimeout(() => {
+      endStickersShown = 2;
+      chatEl.insertBefore(buildStickerWrap(STICKER_END_2), typingEl);
+      scrollBottom();
+      playDing();
+    }, 3000);
   }, 1800);
 }
 
