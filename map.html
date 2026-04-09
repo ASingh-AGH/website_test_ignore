@@ -347,6 +347,65 @@
       0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
       100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
     }
+
+    /* ---- PASSWORD GATE ---- */
+    #map-password-screen {
+      min-height: calc(100vh - 4rem);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 2rem 1rem;
+    }
+    #map-password-box {
+      background: #1f2c34;
+      border: 1px solid #2a3942;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .map-pw-lock  { font-size: 3.2rem; margin-bottom: 0.6rem; animation: wobble 0.9s infinite; }
+    .map-pw-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.3rem; color: #e9edef; }
+    .map-pw-hint  { font-size: 0.9rem; color: #8696a0; margin-bottom: 1.4rem; }
+    #map-password-input {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border-radius: 99px;
+      border: 1px solid #2a3942;
+      background: #0b141a;
+      color: #e9edef;
+      font-size: 0.97rem;
+      outline: none;
+      margin-bottom: 0.85rem;
+      text-align: center;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    #map-password-input:focus { border-color: #00a884; }
+    #map-password-submit {
+      padding: 0.6rem 2rem;
+      background: #00a884;
+      border: none;
+      border-radius: 99px;
+      color: #fff;
+      font-size: 0.97rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.12s;
+      font-family: inherit;
+    }
+    #map-password-submit:hover  { background: #25d366; transform: scale(1.04); }
+    #map-password-submit:active { transform: scale(0.97); }
+    #map-password-error {
+      font-size: 0.87rem;
+      color: #ff4fa3;
+      margin-top: 0.65rem;
+    }
+    #map-password-error[hidden] { display: none; }
+    #map-content[hidden] { display: none; }
   </style>
 </head>
 <body>
@@ -362,6 +421,22 @@
       </div>
     </a>
   </header>
+
+  <!-- ==================== PASSWORD GATE ==================== -->
+  <div id="map-password-screen">
+    <div id="map-password-box">
+      <div class="map-pw-lock">🔒</div>
+      <h2 class="map-pw-title">Password Required</h2>
+      <p class="map-pw-hint"><em>Hint: where is this plane flying to?</em></p>
+      <input id="map-password-input" type="text" placeholder="Type the answer…"
+             autocomplete="off" spellcheck="false" aria-label="Password">
+      <button id="map-password-submit">Unlock ✈️</button>
+      <p id="map-password-error" hidden aria-live="polite">❌ Wrong password. Try again!</p>
+    </div>
+  </div>
+
+  <!-- ==================== MAP CONTENT (hidden until unlocked) ==================== -->
+  <div id="map-content" hidden>
 
   <h1>✈️ Ali's Silly Journey! ✈️</h1>
   <p class="subtitle">Flying from Germany all the way to Katowice for absolutely no reason 😂</p>
@@ -508,6 +583,8 @@
       <div class="photo-grid" id="modal-photos"></div>
     </div>
   </div>
+
+  </div><!-- /#map-content -->
 
   <script>
     // ==================== PHOTO CITY DATA ====================
@@ -720,7 +797,31 @@
     }
 
     replayBtn.addEventListener('click', startAnimation);
-    window.addEventListener('load', startAnimation);
+    // startAnimation is called by the password gate; NOT on load.
+
+    // ==================== PASSWORD GATE ====================
+    const pwScreen = document.getElementById('map-password-screen');
+    const pwInput  = document.getElementById('map-password-input');
+    const pwSubmit = document.getElementById('map-password-submit');
+    const pwError  = document.getElementById('map-password-error');
+    const mapContent = document.getElementById('map-content');
+
+    function unlockMap() {
+      const answer = pwInput.value.trim().toLowerCase();
+      if (answer === 'katowice') {
+        pwScreen.setAttribute('hidden', '');
+        mapContent.removeAttribute('hidden');
+        startAnimation();
+      } else {
+        pwError.removeAttribute('hidden');
+        pwInput.value = '';
+        pwInput.focus();
+        setTimeout(() => pwError.setAttribute('hidden', ''), 2500);
+      }
+    }
+
+    pwSubmit.addEventListener('click', unlockMap);
+    pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockMap(); });
 
     // ==================== CONFETTI ====================
     const COLORS = ['#ff4fa3','#ffe94f','#4ff0ff','#a84fff','#ff6b35','#7fff00'];

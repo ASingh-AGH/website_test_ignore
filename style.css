@@ -167,7 +167,51 @@ body {
   font-size: 1.2rem;
   color: var(--wa-text-dim);
   cursor: default;
+  position: relative;
 }
+
+/* Reset for anchor / button used as header icons */
+.wa-header-icon-link,
+#wa-menu-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--wa-text-dim);
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.wa-header-icon-link:hover,
+#wa-menu-btn:hover { color: var(--wa-text); }
+
+/* ---- Hamburger dropdown menu ---- */
+#wa-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  z-index: 300;
+  background: #2a3942;
+  border: 1px solid var(--wa-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55);
+  min-width: 180px;
+  padding: 0.3rem 0;
+}
+#wa-menu-dropdown[hidden] { display: none !important; }
+
+.wa-menu-item {
+  display: block;
+  padding: 0.65rem 1.1rem;
+  color: var(--wa-text);
+  text-decoration: none;
+  font-size: 0.93rem;
+  transition: background 0.15s;
+}
+.wa-menu-item:hover { background: rgba(255,255,255,0.07); }
 
 /* ==================== CHAT WINDOW ==================== */
 #chat-window {
@@ -193,16 +237,26 @@ body {
   background: rgba(255,255,255,0.07);
   border-radius: 8px;
   padding: 0.22rem 0.75rem;
-  margin: 0.6rem auto 0.9rem;
+  margin: 0.6rem 0 0.9rem;
   width: fit-content;
+  align-self: center;
+}
+
+/* ==================== MESSAGE CONTAINER ==================== */
+/* Must be flex so align-self on individual messages takes effect */
+#chat-messages {
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==================== MESSAGE BASE ==================== */
 .wa-msg {
   display: flex;
   flex-direction: column;
-  margin-bottom: 3px;
+  width: fit-content;
+  min-width: 100px;
   max-width: 82%;
+  margin-bottom: 3px;
   animation: msgPop 0.22s ease-out both;
 }
 

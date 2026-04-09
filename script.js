@@ -221,7 +221,6 @@ const SCRIPT = [
   // ---- Pre-existing messages (already "sent" earlier today) ----
   { type:'preload', bubbleClass:'',           text:'hi 👋',                                                          time:'10:28 AM' },
   { type:'preload', bubbleClass:'sticker-bubble', html:mkStickerHTML(STICKER_AFTER_HI),                               time:'10:29 AM' },
-  { type:'preload', bubbleClass:'chess-bubble', html:mkChessHTML(),                                                    time:'10:31 AM' },
   { type:'preload', bubbleClass:'',           text:':)))))',                                                            time:'10:31 AM' },
 
   { type:'delay', ms: 1400 },
@@ -240,6 +239,7 @@ const SCRIPT = [
   { type:'msg', text:'You absolute legend!! You made it another year without being launched into the sun 🌞', typing:1800 },
   { type:'msg', text:'🎈🎊🎉🦄🚀🎂🥳🎉🎊🎈',                                                  typing: 700  },
   { type:'msg', text:'We brought the whole crew to celebrate 🥳',                              typing:1000  },
+  { type:'msg', bubbleClass:'chess-bubble', html:mkChessHTML(),                                typing:1400  },
 
   { type:'gate', label:'Tap for the receipts 😬' },
 
@@ -740,4 +740,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   clearGate();
   runLoadingBar();
+
+  // ---- Hamburger menu ----
+  const menuBtn      = document.getElementById('wa-menu-btn');
+  const menuDropdown = document.getElementById('wa-menu-dropdown');
+  if (menuBtn && menuDropdown) {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !menuDropdown.hasAttribute('hidden');
+      if (isOpen) {
+        menuDropdown.setAttribute('hidden', '');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      } else {
+        menuDropdown.removeAttribute('hidden');
+        menuBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+    // Close on any outside click
+    document.addEventListener('click', () => {
+      if (!menuDropdown.hasAttribute('hidden')) {
+        menuDropdown.setAttribute('hidden', '');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
 });

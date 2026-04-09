@@ -30,9 +30,15 @@
         </div>
       </div>
       <div class="wa-header-icons">
-        <span aria-label="video call">🔍</span>
-        <span aria-label="call">📞</span>
-        <span aria-label="menu">⋮</span>
+        <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer"
+           class="wa-header-icon-link" aria-label="Search / Pinterest">🔍</a>
+        <a href="https://discord.com" target="_blank" rel="noopener noreferrer"
+           class="wa-header-icon-link" aria-label="Call / Discord">📞</a>
+        <button id="wa-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false">⋮</button>
+        <!-- Dropdown sits inside .wa-header-icons for relative positioning -->
+        <div id="wa-menu-dropdown" hidden role="menu">
+          <a href="chess.html" role="menuitem" class="wa-menu-item">♟️ Chess Game</a>
+        </div>
       </div>
     </header>
 
