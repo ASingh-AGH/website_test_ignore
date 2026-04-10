@@ -805,6 +805,13 @@ function showDinoGame() {
   overlay.removeAttribute('hidden');
   overlay.classList.add('active');
 
+  // Push chat window up so the last message (chess card) scrolls above the overlay
+  const chatWin = document.getElementById('chat-window');
+  if (chatWin) {
+    chatWin.classList.add('dino-active');
+    scrollBottom();
+  }
+
   // Size canvas to device pixels
   function resize() {
     canvas.width  = canvas.offsetWidth  * (window.devicePixelRatio || 1);
