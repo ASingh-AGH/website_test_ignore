@@ -542,6 +542,41 @@ body {
 #chat-challenge-btn:active { transform: scale(0.95); }
 #chat-challenge-btn:disabled { opacity: 0.6; cursor: default; }
 
+/* ---- Letter Post ---- */
+.wa-bubble.post-bubble {
+  background: var(--wa-received);
+  border: 2px solid rgba(255,233,79,0.3);
+  cursor: pointer;
+  text-align: center;
+  padding: 1rem 1.2rem 1.6rem;
+  transition: transform 0.15s, border-color 0.2s, opacity 0.3s;
+}
+.wa-bubble.post-bubble:hover:not(.post-opened) {
+  transform: scale(1.03);
+  border-color: rgba(255,233,79,0.7);
+}
+.wa-bubble.post-bubble.post-opened {
+  opacity: 0.55;
+  cursor: default;
+}
+.post-envelope-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  animation: envelopeFloat 2s ease-in-out infinite alternate;
+}
+.wa-bubble.post-bubble.post-opened .post-envelope-icon {
+  animation: none;
+}
+.post-open-hint {
+  font-size: 0.82rem;
+  color: var(--wa-text-dim);
+}
+@keyframes envelopeFloat {
+  from { transform: translateY(0) rotate(-3deg); }
+  to   { transform: translateY(-6px) rotate(3deg); }
+}
+
 /* ---- Heartfelt ---- */
 .wa-bubble.heartfelt-bubble {
   background: rgba(255,255,255,0.93);
