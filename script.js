@@ -713,6 +713,8 @@ function revealHeartfelt() {
       chatEl.insertBefore(buildChessWrap(), typingEl);
       scrollBottom();
       playDing();
+      // Dino wanders in ~3 s after chess
+      setTimeout(showDinoGame, 3000);
     }, 4500);
   }, 1800);
 }
@@ -786,3 +788,363 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ==================== DINO GAME ====================
+// Phases: 'intro' (walk-in) → 'idle' (tap to start) → 'playing' → 'dead'
+let dinoGameStarted = false;
+
+function showDinoGame() {
+  if (dinoGameStarted) return;
+  dinoGameStarted = true;
+
+  const overlay = document.getElementById('dino-overlay');
+  const canvas  = document.getElementById('dino-canvas');
+  if (!overlay || !canvas) return;
+
+  overlay.removeAttribute('hidden');
+  overlay.classList.add('active');
+
+  // Size canvas to device pixels
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * (window.devicePixelRatio || 1);
+    canvas.height = canvas.offsetHeight * (window.devicePixelRatio || 1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const ctx  = canvas.getContext('2d');
+  const DPR  = () => window.devicePixelRatio || 1;
+
+  // ---------- constants ----------
+  const GROUND_RATIO = 0.72; // fraction of canvas height for ground line
+  const GRAVITY  = 0.55;
+  const JUMP_VEL = -12.5;
+  const BASE_SPD = 6;
+
+  // ---------- state ----------
+  let phase     = 'intro'; // intro | idle | playing | dead
+  let frameId   = 0;
+  let score     = 0;
+  let highScore = 0;
+  let speed     = BASE_SPD;
+
+  // dino walk sprite (3 leg frames)
+  const DINO_W = 40, DINO_H = 52;
+  let dinoX, dinoY, dinoVY = 0, dinoOnGround = true;
+  let legFrame = 0, legTick = 0;
+
+  // cacti
+  let cacti = [];
+  let cactusTimer = 0;
+  let nextCactus  = 90;
+
+  // intro: dino starts off-screen right and walks in
+  let introX;
+
+  function groundY() {
+    return Math.floor(canvas.height * GROUND_RATIO);
+  }
+
+  function reset() {
+    dinoY = groundY() - DINO_H;
+    dinoVY = 0;
+    dinoOnGround = true;
+    dinoX = Math.floor(canvas.width * 0.12);
+    cacti = [];
+    cactusTimer = 0;
+    nextCactus  = 80 + Math.floor(Math.random() * 60);
+    score  = 0;
+    speed  = BASE_SPD;
+    legFrame = 0; legTick = 0;
+  }
+
+  function drawDino(x, y, dead) {
+    const dpr = DPR();
+    const s = dpr; // scale factor relative to CSS pixels already baked in
+    ctx.save();
+
+    // body
+    ctx.fillStyle = dead ? '#e04060' : '#e9edef';
+    ctx.beginPath();
+    ctx.roundRect(x, y, DINO_W * dpr, DINO_H * 0.65 * dpr, 4 * dpr);
+    ctx.fill();
+
+    // neck + head
+    ctx.fillStyle = dead ? '#e04060' : '#e9edef';
+    ctx.beginPath();
+    ctx.roundRect(x + DINO_W * 0.45 * dpr, y - DINO_H * 0.3 * dpr,
+                  DINO_W * 0.55 * dpr, DINO_H * 0.48 * dpr, 4 * dpr);
+    ctx.fill();
+
+    // eye
+    ctx.fillStyle = dead ? '#fff' : '#0b141a';
+    const eyeR = 4 * dpr;
+    ctx.beginPath();
+    ctx.arc(x + DINO_W * 0.82 * dpr, y - DINO_H * 0.08 * dpr, eyeR, 0, Math.PI * 2);
+    ctx.fill();
+    if (dead) {
+      // X eyes
+      ctx.strokeStyle = '#0b141a';
+      ctx.lineWidth = 2 * dpr;
+      const ex = x + DINO_W * 0.82 * dpr, ey = y - DINO_H * 0.08 * dpr;
+      ctx.beginPath(); ctx.moveTo(ex - eyeR, ey - eyeR); ctx.lineTo(ex + eyeR, ey + eyeR); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex + eyeR, ey - eyeR); ctx.lineTo(ex - eyeR, ey + eyeR); ctx.stroke();
+    }
+
+    // tail
+    ctx.fillStyle = dead ? '#e04060' : '#e9edef';
+    ctx.beginPath();
+    ctx.roundRect(x - DINO_W * 0.3 * dpr, y + DINO_H * 0.2 * dpr,
+                  DINO_W * 0.35 * dpr, DINO_H * 0.18 * dpr, 3 * dpr);
+    ctx.fill();
+
+    // legs
+    if (!dead) {
+      const legOffsets = legFrame === 0 ? [0.15, 0.6] : legFrame === 1 ? [0.05, 0.5] : [0.2, 0.55];
+      legOffsets.forEach((off) => {
+        ctx.fillStyle = '#e9edef';
+        ctx.beginPath();
+        ctx.roundRect(x + off * DINO_W * dpr, y + DINO_H * 0.62 * dpr,
+                      DINO_W * 0.2 * dpr, DINO_H * 0.38 * dpr, 3 * dpr);
+        ctx.fill();
+      });
+    } else {
+      // static legs when dead
+      [[0.1, 0.25], [0.5, 0.35]].forEach(([off, ang]) => {
+        ctx.fillStyle = '#e04060';
+        ctx.save();
+        ctx.translate(x + off * DINO_W * dpr, y + DINO_H * 0.62 * dpr);
+        ctx.rotate(ang);
+        ctx.beginPath();
+        ctx.roundRect(0, 0, DINO_W * 0.2 * dpr, DINO_H * 0.38 * dpr, 3 * dpr);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+  }
+
+  function drawCactus(cx, cy, w, h) {
+    const dpr = DPR();
+    ctx.fillStyle = '#25d366';
+    // trunk
+    const tw = w * 0.35 * dpr;
+    ctx.beginPath();
+    ctx.roundRect(cx + (w * dpr - tw) / 2, cy, tw, h * dpr, 3 * dpr);
+    ctx.fill();
+    // left arm
+    ctx.beginPath();
+    ctx.roundRect(cx, cy + h * 0.3 * dpr, (w * dpr - tw) / 2 + tw * 0.5, h * 0.25 * dpr, 3 * dpr);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(cx, cy + h * 0.1 * dpr, tw * 0.7, h * 0.22 * dpr, 3 * dpr);
+    ctx.fill();
+    // right arm
+    const rx = cx + (w * dpr - tw) / 2 + tw * 0.5;
+    ctx.beginPath();
+    ctx.roundRect(rx, cy + h * 0.25 * dpr, (w * dpr - tw) / 2, h * 0.25 * dpr, 3 * dpr);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(cx + w * dpr - tw * 0.7, cy + h * 0.05 * dpr, tw * 0.7, h * 0.22 * dpr, 3 * dpr);
+    ctx.fill();
+  }
+
+  function drawScene(dead) {
+    const dpr   = DPR();
+    const W     = canvas.width;
+    const H     = canvas.height;
+    const gY    = groundY();
+
+    ctx.clearRect(0, 0, W, H);
+
+    // ground line
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth   = 1.5 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(0, gY);
+    ctx.lineTo(W, gY);
+    ctx.stroke();
+
+    // score
+    if (phase === 'playing' || phase === 'dead') {
+      ctx.fillStyle   = 'rgba(233,237,239,0.8)';
+      ctx.font        = `bold ${13 * dpr}px monospace`;
+      ctx.textAlign   = 'right';
+      ctx.fillText('HI ' + String(highScore).padStart(5,'0') + '  ' + String(score).padStart(5,'0'),
+                   W - 12 * dpr, 22 * dpr);
+    }
+
+    // hint text
+    if (phase === 'idle') {
+      ctx.fillStyle = 'rgba(0,168,132,0.9)';
+      ctx.font      = `${12 * dpr}px 'Segoe UI', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('🦕  SPACE / TAP to start', W / 2, gY - 20 * dpr);
+    }
+
+    if (phase === 'dead') {
+      ctx.fillStyle = 'rgba(233,237,239,0.92)';
+      ctx.font      = `bold ${13 * dpr}px 'Segoe UI', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER — tap to restart', W / 2, gY - 22 * dpr);
+    }
+
+    // cacti
+    cacti.forEach(c => drawCactus(c.x, gY - c.h * dpr, c.w, c.h));
+
+    // dino
+    drawDino(dinoX, dinoY, dead);
+  }
+
+  function jump() {
+    if (dinoOnGround) {
+      dinoVY = JUMP_VEL * DPR();
+      dinoOnGround = false;
+      playPop();
+    }
+  }
+
+  function handleInput() {
+    if (phase === 'idle') {
+      phase = 'playing';
+      reset();
+    } else if (phase === 'playing') {
+      jump();
+    } else if (phase === 'dead') {
+      phase = 'playing';
+      reset();
+    }
+  }
+
+  canvas.addEventListener('click', handleInput);
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); }, { passive: false });
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && (phase === 'idle' || phase === 'playing' || phase === 'dead')) {
+      e.preventDefault();
+      handleInput();
+    }
+  });
+
+  // ---- intro walk-in ----
+  function startIntro() {
+    const dpr  = DPR();
+    introX = canvas.width + DINO_W * dpr * 2;
+    dinoY  = groundY() - DINO_H * dpr;
+    dinoVY = 0;
+    dinoOnGround = true;
+    dinoX  = Math.floor(canvas.width * 0.12);
+  }
+
+  startIntro();
+
+  function introFrame() {
+    const dpr = DPR();
+    const W   = canvas.width, H = canvas.height;
+    const gY  = groundY();
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth   = 1.5 * dpr;
+    ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(W, gY); ctx.stroke();
+
+    // hint at idle position
+    ctx.fillStyle = 'rgba(0,168,132,0.7)';
+    ctx.font      = `${11 * dpr}px 'Segoe UI', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('🦕  incoming…', W / 2, gY - 16 * dpr);
+
+    // walk legs
+    legTick++;
+    if (legTick % 7 === 0) legFrame = (legFrame + 1) % 3;
+
+    const walkSpeed = 4 * dpr;
+    introX -= walkSpeed;
+
+    drawDino(introX, gY - DINO_H * dpr, false);
+
+    if (introX <= dinoX) {
+      phase = 'idle';
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(gameLoop);
+    } else {
+      frameId = requestAnimationFrame(introFrame);
+    }
+  }
+
+  function gameLoop() {
+    const dpr = DPR();
+    const W   = canvas.width;
+    const gY  = groundY();
+
+    if (phase === 'idle') {
+      legTick++;
+      if (legTick % 18 === 0) legFrame = (legFrame + 1) % 3;
+      drawScene(false);
+      frameId = requestAnimationFrame(gameLoop);
+      return;
+    }
+
+    if (phase === 'dead') {
+      drawScene(true);
+      frameId = requestAnimationFrame(gameLoop);
+      return;
+    }
+
+    // --- playing ---
+    score++;
+    if (score > highScore) highScore = score;
+    if (score % 200 === 0) speed = Math.min(BASE_SPD + score / 200, 16);
+
+    // dino physics
+    if (!dinoOnGround) {
+      dinoVY += GRAVITY * dpr;
+      dinoY  += dinoVY;
+      const floor = gY - DINO_H * dpr;
+      if (dinoY >= floor) {
+        dinoY = floor;
+        dinoVY = 0;
+        dinoOnGround = true;
+      }
+    }
+
+    // legs walk animation
+    legTick++;
+    if (legTick % 6 === 0) legFrame = (legFrame + 1) % 3;
+
+    // spawn cacti
+    cactusTimer++;
+    if (cactusTimer >= nextCactus) {
+      const h = 28 + Math.floor(Math.random() * 24);
+      const w = 18 + Math.floor(Math.random() * 14);
+      cacti.push({ x: W, h, w });
+      cactusTimer = 0;
+      nextCactus  = 60 + Math.floor(Math.random() * 80);
+    }
+
+    // move + prune cacti
+    cacti = cacti.filter(c => c.x > -c.w * dpr * 2);
+    cacti.forEach(c => { c.x -= speed * dpr; });
+
+    // collision
+    const dLeft   = dinoX + DINO_W * 0.25 * dpr;
+    const dRight  = dinoX + DINO_W * 0.85 * dpr;
+    const dBottom = dinoY + DINO_H * 0.95 * dpr;
+    const dTop    = dinoY + DINO_H * 0.2  * dpr;
+
+    for (const c of cacti) {
+      const cLeft   = c.x + c.w * 0.1 * dpr;
+      const cRight  = c.x + c.w * 0.9 * dpr;
+      const cTop    = gY - c.h * dpr;
+      if (dRight > cLeft && dLeft < cRight && dBottom > cTop) {
+        phase = 'dead';
+        playTone(200, 'sawtooth', 0.3, getAudioCtx().currentTime, 0.35);
+        break;
+      }
+    }
+
+    drawScene(false);
+    frameId = requestAnimationFrame(gameLoop);
+  }
+
+  frameId = requestAnimationFrame(introFrame);
+}

@@ -42,20 +42,11 @@
         <button id="wa-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false">⋮</button>
         <!-- Dropdown sits inside .wa-header-icons for relative positioning -->
         <div id="wa-menu-dropdown" hidden role="menu">
+          <a href="map.html" role="menuitem" class="wa-menu-item">🗺️ Map</a>
           <a href="chess.html" role="menuitem" class="wa-menu-item">♟️ Chess Game</a>
         </div>
       </div>
     </header>
-
-    <!-- Messages area -->
-    <div id="spotify-bar">
-      <iframe
-        src="https://open.spotify.com/embed/album/76V9WMm2cXFd2UPntSGV7A?utm_source=generator"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        allowfullscreen
-        title="French music">
-      </iframe>
-    </div>
 
     <!-- Messages area -->
     <div id="chat-window">
@@ -95,6 +86,21 @@
 
   <!-- Flying plane overlay — launched when plane bubble appears -->
   <div id="flying-plane" hidden aria-hidden="true">✈️</div>
+
+  <!-- Spotify floating mini-player (top-right, ombre border) -->
+  <div id="spotify-float">
+    <iframe
+      src="https://open.spotify.com/embed/album/76V9WMm2cXFd2UPntSGV7A?utm_source=generator"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+      title="French music">
+    </iframe>
+  </div>
+
+  <!-- Dino game — walks in from right after all messages are done -->
+  <div id="dino-overlay" hidden>
+    <canvas id="dino-canvas"></canvas>
+  </div>
 
   <script src="script.js"></script>
 </body>
