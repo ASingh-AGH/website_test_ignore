@@ -296,6 +296,17 @@ const sendEl   = document.getElementById('wa-send-btn');
 const typingEl = document.getElementById('typing-indicator');
 const statusEl = document.getElementById('wa-header-status');
 
+// Reveal a hidden header icon with a pop-in animation.
+function revealHeaderIcon(id) {
+  const el = document.getElementById(id);
+  if (!el || !el.hasAttribute('hidden')) return;
+  el.removeAttribute('hidden');
+  // Re-trigger the CSS animation each time (removes then re-adds the class)
+  el.classList.remove('header-unlock-icon');
+  void el.offsetWidth; // force reflow
+  el.classList.add('header-unlock-icon');
+}
+
 function scrollBottom() {
   winEl.scrollTo({ top: winEl.scrollHeight, behavior: 'smooth' });
 }
@@ -340,6 +351,7 @@ function appendMsg(beat) {
   playDing();
   if (beat.onShow) beat.onShow();
   if (beat.bubbleClass === 'challenge-bubble') initChallenge();
+  if (beat.bubbleClass === 'plane-bubble')    revealHeaderIcon('hdr-map-icon');
   return el;
 }
 
@@ -637,6 +649,13 @@ function loadState() {
     restoreChallenge();
   }
 
+  // Restore header unlock icons
+  const planeBeatIdx = SCRIPT.findIndex(b => b.bubbleClass === 'plane-bubble');
+  if (planeBeatIdx >= 0 && (s.renderedIdxs || []).includes(planeBeatIdx)) {
+    revealHeaderIcon('hdr-map-icon');
+  }
+  if (endStickersShown >= 3) revealHeaderIcon('hdr-chess-icon');
+
   if (s.gateOpen && s.gateLabel) {
     setGate(s.gateLabel);
   } else {
@@ -714,6 +733,7 @@ function revealHeartfelt() {
       chatEl.insertBefore(buildChessWrap(), typingEl);
       scrollBottom();
       playDing();
+      revealHeaderIcon('hdr-chess-icon');
       // Dino wanders in after chess
       setTimeout(showDinoGame, DINO_DELAY_MS);
     }, 4500);
@@ -811,6 +831,7 @@ function showDinoGame() {
     chatWin.classList.add('dino-active');
     scrollBottom();
   }
+  revealHeaderIcon('hdr-dino-icon');
 
   // Size canvas to device pixels
   function resize() {
@@ -831,15 +852,19 @@ function showDinoGame() {
   const MAX_SPEED             = 16;
   const SPEED_INCREASE_INTERVAL = 200; // score ticks between speed bumps
 
+  // Dino dimensions — normal and crouching
+  const DINO_W = 40, DINO_H = 52;
+  const DINO_W_CROUCH = 58, DINO_H_CROUCH = 30;
+
   // ---------- state ----------
   let phase     = 'intro'; // intro | idle | playing | dead
   let frameId   = 0;
   let score     = 0;
   let highScore = 0;
   let speed     = BASE_SPD;
+  let isCrouching = false; // player holding down-arrow / swiping down
 
   // dino walk sprite (3 leg frames)
-  const DINO_W = 40, DINO_H = 52;
   let dinoX, dinoY, dinoVY = 0, dinoOnGround = true;
   let legFrame = 0, legTick = 0;
 
@@ -847,6 +872,11 @@ function showDinoGame() {
   let cacti = [];
   let cactusTimer = 0;
   let nextCactus  = 90;
+
+  // clouds
+  let clouds = [];
+  let cloudTimer = 0;
+  let nextCloud  = 80;
 
   // intro: dino starts off-screen right and walks in
   let introX;
@@ -859,6 +889,7 @@ function showDinoGame() {
     dinoY = groundY() - DINO_H;
     dinoVY = 0;
     dinoOnGround = true;
+    isCrouching = false;
     dinoX = Math.floor(canvas.width * 0.12);
     cacti = [];
     cactusTimer = 0;
@@ -868,68 +899,104 @@ function showDinoGame() {
     legFrame = 0; legTick = 0;
   }
 
-  function drawDino(x, y, dead) {
+  function drawDino(x, y, dead, crouching) {
     const dpr = DPR();
-    const s = dpr; // scale factor relative to CSS pixels already baked in
+    const dW  = crouching ? DINO_W_CROUCH : DINO_W;
+    const dH  = crouching ? DINO_H_CROUCH : DINO_H;
+    const col = dead ? '#e04060' : '#e9edef';
     ctx.save();
+    ctx.fillStyle = col;
 
-    // body
-    ctx.fillStyle = dead ? '#e04060' : '#e9edef';
-    ctx.beginPath();
-    ctx.roundRect(x, y, DINO_W * dpr, DINO_H * 0.65 * dpr, 4 * dpr);
-    ctx.fill();
-
-    // neck + head
-    ctx.fillStyle = dead ? '#e04060' : '#e9edef';
-    ctx.beginPath();
-    ctx.roundRect(x + DINO_W * 0.45 * dpr, y - DINO_H * 0.3 * dpr,
-                  DINO_W * 0.55 * dpr, DINO_H * 0.48 * dpr, 4 * dpr);
-    ctx.fill();
-
-    // eye
-    ctx.fillStyle = dead ? '#fff' : '#0b141a';
-    const eyeR = 4 * dpr;
-    ctx.beginPath();
-    ctx.arc(x + DINO_W * 0.82 * dpr, y - DINO_H * 0.08 * dpr, eyeR, 0, Math.PI * 2);
-    ctx.fill();
-    if (dead) {
-      // X eyes
-      ctx.strokeStyle = '#0b141a';
-      ctx.lineWidth = 2 * dpr;
-      const ex = x + DINO_W * 0.82 * dpr, ey = y - DINO_H * 0.08 * dpr;
-      ctx.beginPath(); ctx.moveTo(ex - eyeR, ey - eyeR); ctx.lineTo(ex + eyeR, ey + eyeR); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(ex + eyeR, ey - eyeR); ctx.lineTo(ex - eyeR, ey + eyeR); ctx.stroke();
-    }
-
-    // tail
-    ctx.fillStyle = dead ? '#e04060' : '#e9edef';
-    ctx.beginPath();
-    ctx.roundRect(x - DINO_W * 0.3 * dpr, y + DINO_H * 0.2 * dpr,
-                  DINO_W * 0.35 * dpr, DINO_H * 0.18 * dpr, 3 * dpr);
-    ctx.fill();
-
-    // legs
-    if (!dead) {
-      const legOffsets = legFrame === 0 ? [0.15, 0.6] : legFrame === 1 ? [0.05, 0.5] : [0.2, 0.55];
-      legOffsets.forEach((off) => {
-        ctx.fillStyle = '#e9edef';
+    if (crouching) {
+      // ---- crouched shape: wide flat body, head forward ----
+      // body
+      ctx.beginPath();
+      ctx.roundRect(x, y, dW * 0.62 * dpr, dH * dpr, 4 * dpr);
+      ctx.fill();
+      // head (stretched forward and low)
+      ctx.beginPath();
+      ctx.roundRect(x + dW * 0.52 * dpr, y - dH * 0.12 * dpr,
+                    dW * 0.5 * dpr, dH * 0.78 * dpr, 4 * dpr);
+      ctx.fill();
+      // eye
+      ctx.fillStyle = dead ? '#fff' : '#0b141a';
+      const eyeR = 3.5 * dpr;
+      const ex = x + dW * 0.88 * dpr, ey = y + dH * 0.22 * dpr;
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeR, 0, Math.PI * 2);
+      ctx.fill();
+      if (dead) {
+        ctx.strokeStyle = '#0b141a'; ctx.lineWidth = 2 * dpr;
+        ctx.beginPath(); ctx.moveTo(ex - eyeR, ey - eyeR); ctx.lineTo(ex + eyeR, ey + eyeR); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex + eyeR, ey - eyeR); ctx.lineTo(ex - eyeR, ey + eyeR); ctx.stroke();
+      }
+      // tail
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.roundRect(x - dW * 0.22 * dpr, y + dH * 0.25 * dpr,
+                    dW * 0.27 * dpr, dH * 0.3 * dpr, 3 * dpr);
+      ctx.fill();
+      // legs (stubby)
+      ctx.fillStyle = col;
+      const cLegOffs = legFrame === 0 ? [0.08, 0.4] : legFrame === 1 ? [0.05, 0.37] : [0.1, 0.43];
+      cLegOffs.forEach(off => {
         ctx.beginPath();
-        ctx.roundRect(x + off * DINO_W * dpr, y + DINO_H * 0.62 * dpr,
-                      DINO_W * 0.2 * dpr, DINO_H * 0.38 * dpr, 3 * dpr);
+        ctx.roundRect(x + off * dW * dpr, y + dH * 0.68 * dpr,
+                      dW * 0.15 * dpr, dH * 0.4 * dpr, 3 * dpr);
         ctx.fill();
       });
+
     } else {
-      // static legs when dead
-      [[0.1, 0.25], [0.5, 0.35]].forEach(([off, ang]) => {
-        ctx.fillStyle = '#e04060';
-        ctx.save();
-        ctx.translate(x + off * DINO_W * dpr, y + DINO_H * 0.62 * dpr);
-        ctx.rotate(ang);
-        ctx.beginPath();
-        ctx.roundRect(0, 0, DINO_W * 0.2 * dpr, DINO_H * 0.38 * dpr, 3 * dpr);
-        ctx.fill();
-        ctx.restore();
-      });
+      // ---- upright shape (original) ----
+      // body
+      ctx.beginPath();
+      ctx.roundRect(x, y, DINO_W * dpr, DINO_H * 0.65 * dpr, 4 * dpr);
+      ctx.fill();
+      // neck + head
+      ctx.beginPath();
+      ctx.roundRect(x + DINO_W * 0.45 * dpr, y - DINO_H * 0.3 * dpr,
+                    DINO_W * 0.55 * dpr, DINO_H * 0.48 * dpr, 4 * dpr);
+      ctx.fill();
+      // eye
+      ctx.fillStyle = dead ? '#fff' : '#0b141a';
+      const eyeR2 = 4 * dpr;
+      const ex2 = x + DINO_W * 0.82 * dpr, ey2 = y - DINO_H * 0.08 * dpr;
+      ctx.beginPath();
+      ctx.arc(ex2, ey2, eyeR2, 0, Math.PI * 2);
+      ctx.fill();
+      if (dead) {
+        ctx.strokeStyle = '#0b141a'; ctx.lineWidth = 2 * dpr;
+        ctx.beginPath(); ctx.moveTo(ex2 - eyeR2, ey2 - eyeR2); ctx.lineTo(ex2 + eyeR2, ey2 + eyeR2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex2 + eyeR2, ey2 - eyeR2); ctx.lineTo(ex2 - eyeR2, ey2 + eyeR2); ctx.stroke();
+      }
+      // tail
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.roundRect(x - DINO_W * 0.3 * dpr, y + DINO_H * 0.2 * dpr,
+                    DINO_W * 0.35 * dpr, DINO_H * 0.18 * dpr, 3 * dpr);
+      ctx.fill();
+      // legs
+      if (!dead) {
+        const legOffsets = legFrame === 0 ? [0.15, 0.6] : legFrame === 1 ? [0.05, 0.5] : [0.2, 0.55];
+        legOffsets.forEach((off) => {
+          ctx.fillStyle = '#e9edef';
+          ctx.beginPath();
+          ctx.roundRect(x + off * DINO_W * dpr, y + DINO_H * 0.62 * dpr,
+                        DINO_W * 0.2 * dpr, DINO_H * 0.38 * dpr, 3 * dpr);
+          ctx.fill();
+        });
+      } else {
+        [[0.1, 0.25], [0.5, 0.35]].forEach(([off, ang]) => {
+          ctx.fillStyle = '#e04060';
+          ctx.save();
+          ctx.translate(x + off * DINO_W * dpr, y + DINO_H * 0.62 * dpr);
+          ctx.rotate(ang);
+          ctx.beginPath();
+          ctx.roundRect(0, 0, DINO_W * 0.2 * dpr, DINO_H * 0.38 * dpr, 3 * dpr);
+          ctx.fill();
+          ctx.restore();
+        });
+      }
     }
     ctx.restore();
   }
@@ -959,6 +1026,69 @@ function showDinoGame() {
     ctx.fill();
   }
 
+  function spawnCloud() {
+    const dpr  = DPR();
+    const gY   = groundY();
+    const h    = 12 + Math.floor(Math.random() * 16);   // CSS px
+    const w    = 45 + Math.floor(Math.random() * 70);   // CSS px
+    const y    = Math.floor(gY * (0.1 + Math.random() * 0.42)); // canvas px (sky area)
+    clouds.push({ x: canvas.width + w * dpr, y, w, h, speed: 0.5 + Math.random() * 0.7 });
+  }
+
+  function updateClouds() {
+    const dpr = DPR();
+    cloudTimer++;
+    if (cloudTimer >= nextCloud) {
+      spawnCloud();
+      cloudTimer = 0;
+      nextCloud = 100 + Math.floor(Math.random() * 180);
+    }
+    clouds = clouds.filter(c => c.x > -(c.w * dpr * 2));
+    clouds.forEach(c => { c.x -= c.speed * dpr; });
+  }
+
+  function drawClouds() {
+    const dpr = DPR();
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    clouds.forEach(c => {
+      const cx = c.x + c.w * 0.5 * dpr;
+      const cy = c.y;
+      const rx = c.w * 0.42 * dpr;
+      const ry = c.h * 0.5  * dpr;
+      ctx.beginPath();
+      ctx.ellipse(cx,            cy,           rx,        ry,        0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - rx * 0.42, cy + ry * 0.2, rx * 0.52, ry * 0.78, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + rx * 0.38, cy + ry * 0.15, rx * 0.48, ry * 0.72, 0, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+
+  function spawnCacti() {
+    const dpr  = DPR();
+    const W    = canvas.width;
+    const roll = Math.random();
+    if (roll < 0.28) {
+      // Small single cactus
+      cacti.push({ x: W, h: 20 + Math.floor(Math.random() * 12), w: 14 + Math.floor(Math.random() * 7) });
+    } else if (roll < 0.54) {
+      // Tall single cactus
+      cacti.push({ x: W, h: 44 + Math.floor(Math.random() * 22), w: 15 + Math.floor(Math.random() * 8) });
+    } else if (roll < 0.80) {
+      // Double cluster (two cacti close together)
+      const w1  = 15 + Math.floor(Math.random() * 7);
+      const h1  = 28 + Math.floor(Math.random() * 20);
+      const gap = w1 + 4 + Math.floor(Math.random() * 7);
+      cacti.push({ x: W,             h: h1,                                  w: w1 });
+      cacti.push({ x: W + gap * dpr, h: 22 + Math.floor(Math.random() * 18), w: 13 + Math.floor(Math.random() * 7) });
+    } else {
+      // Wide / fat cactus
+      cacti.push({ x: W, h: 28 + Math.floor(Math.random() * 14), w: 26 + Math.floor(Math.random() * 14) });
+    }
+    cactusTimer = 0;
+    nextCactus  = 70 + Math.floor(Math.random() * 80);
+  }
+
   function drawScene(dead) {
     const dpr   = DPR();
     const W     = canvas.width;
@@ -966,6 +1096,9 @@ function showDinoGame() {
     const gY    = groundY();
 
     ctx.clearRect(0, 0, W, H);
+
+    // clouds (background, drawn before ground)
+    drawClouds();
 
     // ground line
     ctx.strokeStyle = 'rgba(255,255,255,0.2)';
@@ -989,7 +1122,7 @@ function showDinoGame() {
       ctx.fillStyle = 'rgba(0,168,132,0.9)';
       ctx.font      = `${12 * dpr}px 'Segoe UI', sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('🦕  SPACE / TAP to start', W / 2, gY - 20 * dpr);
+      ctx.fillText('🦕  SPACE / TAP to start  ↓ crouch', W / 2, gY - 20 * dpr);
     }
 
     if (phase === 'dead') {
@@ -1003,11 +1136,11 @@ function showDinoGame() {
     cacti.forEach(c => drawCactus(c.x, gY - c.h * dpr, c.w, c.h));
 
     // dino
-    drawDino(dinoX, dinoY, dead);
+    drawDino(dinoX, dinoY, dead, isCrouching);
   }
 
   function jump() {
-    if (dinoOnGround) {
+    if (dinoOnGround && !isCrouching) {
       dinoVY = JUMP_VEL * DPR();
       dinoOnGround = false;
       playPop();
@@ -1027,12 +1160,35 @@ function showDinoGame() {
   }
 
   canvas.addEventListener('click', handleInput);
-  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); }, { passive: false });
+
+  // Touch: tap → jump/start; swipe-down → crouch
+  let touchStartY = 0;
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchStartY = e.touches[0].clientY;
+  }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (phase === 'playing' && e.touches[0].clientY - touchStartY > 35) isCrouching = true;
+  }, { passive: false });
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    isCrouching = false;
+    if (Math.abs(e.changedTouches[0].clientY - touchStartY) < 30) handleInput();
+  }, { passive: false });
+
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && (phase === 'idle' || phase === 'playing' || phase === 'dead')) {
       e.preventDefault();
       handleInput();
     }
+    if (e.code === 'ArrowDown' && phase === 'playing') {
+      e.preventDefault();
+      isCrouching = true;
+    }
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'ArrowDown') isCrouching = false;
   });
 
   // ---- intro walk-in ----
@@ -1057,6 +1213,10 @@ function showDinoGame() {
     ctx.lineWidth   = 1.5 * dpr;
     ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(W, gY); ctx.stroke();
 
+    // clouds drift in during intro
+    updateClouds();
+    drawClouds();
+
     // hint at idle position
     ctx.fillStyle = 'rgba(0,168,132,0.7)';
     ctx.font      = `${11 * dpr}px 'Segoe UI', sans-serif`;
@@ -1070,7 +1230,7 @@ function showDinoGame() {
     const walkSpeed = 4 * dpr;
     introX -= walkSpeed;
 
-    drawDino(introX, gY - DINO_H * dpr, false);
+    drawDino(introX, gY - DINO_H * dpr, false, false);
 
     if (introX <= dinoX) {
       phase = 'idle';
@@ -1089,12 +1249,14 @@ function showDinoGame() {
     if (phase === 'idle') {
       legTick++;
       if (legTick % 18 === 0) legFrame = (legFrame + 1) % 3;
+      updateClouds();
       drawScene(false);
       frameId = requestAnimationFrame(gameLoop);
       return;
     }
 
     if (phase === 'dead') {
+      updateClouds();
       drawScene(true);
       frameId = requestAnimationFrame(gameLoop);
       return;
@@ -1116,30 +1278,37 @@ function showDinoGame() {
         dinoOnGround = true;
       }
     }
+    // Snap to lower crouch position when on ground + crouching
+    if (dinoOnGround && isCrouching) {
+      dinoY = gY - DINO_H_CROUCH * dpr;
+    } else if (dinoOnGround && !isCrouching) {
+      dinoY = gY - DINO_H * dpr;
+    }
 
     // legs walk animation
     legTick++;
     if (legTick % 6 === 0) legFrame = (legFrame + 1) % 3;
 
+    // clouds
+    updateClouds();
+
     // spawn cacti
     cactusTimer++;
     if (cactusTimer >= nextCactus) {
-      const h = 28 + Math.floor(Math.random() * 24);
-      const w = 18 + Math.floor(Math.random() * 14);
-      cacti.push({ x: W, h, w });
-      cactusTimer = 0;
-      nextCactus  = 60 + Math.floor(Math.random() * 80);
+      spawnCacti();
     }
 
     // move + prune cacti
     cacti = cacti.filter(c => c.x > -c.w * dpr * 2);
     cacti.forEach(c => { c.x -= speed * dpr; });
 
-    // collision
-    const dLeft   = dinoX + DINO_W * 0.25 * dpr;
-    const dRight  = dinoX + DINO_W * 0.85 * dpr;
-    const dBottom = dinoY + DINO_H * 0.95 * dpr;
-    const dTop    = dinoY + DINO_H * 0.2  * dpr;
+    // collision (use crouched dimensions when applicable)
+    const curW    = isCrouching ? DINO_W_CROUCH : DINO_W;
+    const curH    = isCrouching ? DINO_H_CROUCH : DINO_H;
+    const dLeft   = dinoX + curW * 0.2  * dpr;
+    const dRight  = dinoX + curW * 0.88 * dpr;
+    const dBottom = dinoY + curH * 0.95 * dpr;
+    const dTop    = dinoY + curH * 0.15 * dpr;
 
     for (const c of cacti) {
       const cLeft   = c.x + c.w * 0.1 * dpr;
