@@ -184,11 +184,7 @@ function mkChallengeHTML() {
     slots += `<span class="candle-slot" id="candle-${i}">🕯️</span>`;
   }
   return `<div class="challenge-header">🎂 Light Ali's birthday candles!</div>
-    <p style="font-size:0.82rem;color:var(--wa-text-dim);margin:0.2rem 0 0.6rem;">
-      Ali is turning <strong style="color:var(--secondary)">24</strong> — one candle per year!
-    </p>
     <div id="candle-grid">${slots}</div>
-    <p id="chat-challenge-progress">0 / 24 candles lit</p>
     <button id="chat-challenge-btn">🕯️ Light a candle!</button>`;
 }
 
@@ -227,9 +223,9 @@ const DINO_DELAY_MS    = 3000; // ms after chess card before dino wanders in
 //   { type:'gate',   label }  — pause until user taps the input bar
 const SCRIPT = [
   // ---- Pre-existing messages (already "sent" earlier today) ----
-  { type:'preload', bubbleClass:'',           text:'hi 👋',                                                          time:'10:28 AM' },
-  { type:'preload', bubbleClass:'sticker-bubble', html:mkStickerHTML(STICKER_AFTER_HI),                               time:'10:29 AM' },
-  { type:'preload', bubbleClass:'',           text:':)))))',                                                            time:'10:31 AM' },
+  { type:'msg', bubbleClass:'',           text:'hi 👋',                                                          time:'10:28 AM', typing: 400  },
+  { type:'msg', bubbleClass:'sticker-bubble', html:mkStickerHTML(STICKER_AFTER_HI),                               time:'10:29 AM', typing: 600  },
+  { type:'msg', bubbleClass:'',           text:':)))))',                                                            time:'10:31 AM', typing: 350  },
 
   { type:'delay', ms: 1400 },
 
@@ -247,37 +243,6 @@ const SCRIPT = [
   { type:'msg', text:'You absolute legend!! You made it another year without being launched into the sun 🌞', typing:1800 },
   { type:'msg', text:'🎈🎊🎉🦄🚀🎂🥳🎉🎊🎈',                                                  typing: 700  },
   { type:'msg', text:'We brought the whole crew to celebrate 🥳',                              typing:1000  },
-
-  { type:'gate', label:'Tap for the receipts 😬' },
-
-  // ---- Phase 3: jokes ----
-  { type:'msg', bubbleClass:'joke-bubble',
-    html: mkJokeHTML('🤣','JOKE_A',
-      'Remember the time you tried to <strong>[JOKE_A: insert the legendary story here]</strong>? '
-    + 'To this day nobody has fully recovered. Scientists are still studying it.'),
-    typing: 1300 },
-
-  { type:'gate', label:'Next one 👀' },
-
-  { type:'msg', bubbleClass:'joke-bubble',
-    html: mkJokeHTML('😬','JOKE_B',
-      'Nobody will EVER forget <strong>[JOKE_B: the incident with the thing at the place]</strong>. '
-    + 'Historians will call it "the event". You know what you did.'),
-    typing: 1400 },
-
-  { type:'gate', label:"Oh no, there's more..." },
-
-  { type:'msg', bubbleClass:'joke-bubble',
-    html: mkJokeHTML('💀','JOKE_C',
-      'And of course, who could overlook <strong>[JOKE_C: that one phrase you always say]</strong>? '
-    + "It's been said approximately 4,000 times. Merch incoming."),
-    typing: 1200 },
-
-  { type:'msg', bubbleClass:'joke-bubble',
-    html: mkJokeHTML('🏆','JOKE_D',
-      'Special award to Ali for <strong>[JOKE_D: that impressive/embarrassing achievement]</strong>. '
-    + 'Frame it. Put it on a resumé. Own it.'),
-    typing: 1300 },
 
   { type:'gate', label:'One more thing... ✈️' },
 
@@ -549,7 +514,6 @@ document.addEventListener('click', (e) => {
 
 function restoreChallenge() {
   const btn        = document.getElementById('chat-challenge-btn');
-  const progressEl = document.getElementById('chat-challenge-progress');
 
   // Restore lit candles (no pop animation for already-lit ones)
   for (let i = 0; i < challengeCount; i++) {
@@ -558,10 +522,8 @@ function restoreChallenge() {
   }
 
   if (challengeDone) {
-    if (progressEl) progressEl.textContent = '🎉 All 24 candles lit!';
     if (btn) { btn.disabled = true; btn.textContent = '✅ Done!'; }
   } else {
-    if (progressEl) progressEl.textContent = challengeCount + ' / 24 candles lit';
     initChallenge(); // re-attach click handler
   }
 }
@@ -688,8 +650,6 @@ function initChallenge() {
     if (challengeDone) return;
     challengeCount++;
 
-    const progressEl = document.getElementById('chat-challenge-progress');
-
     // Light the newly added candle
     const candleEl = document.getElementById('candle-' + (challengeCount - 1));
     if (candleEl) {
@@ -702,12 +662,9 @@ function initChallenge() {
 
     if (challengeCount >= CHALLENGE_CLICKS) {
       challengeDone = true;
-      if (progressEl) progressEl.textContent = '🎉 All 24 candles lit!';
       btn.disabled    = true;
       btn.textContent = '✅ Done!';
       setTimeout(revealHeartfelt, 900);
-    } else {
-      if (progressEl) progressEl.textContent = challengeCount + ' / 24 candles lit';
     }
   });
 }
@@ -791,6 +748,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   clearGate();
   runLoadingBar();
+
+  // ---- Dino header icon — click to show dino game ----
+  const dinoIcon = document.getElementById('hdr-dino-icon');
+  if (dinoIcon) {
+    dinoIcon.addEventListener('click', showDinoGame);
+  }
 
   // ---- Hamburger menu ----
   const menuBtn      = document.getElementById('wa-menu-btn');
