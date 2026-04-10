@@ -213,6 +213,12 @@ function mkHeartfeltHTML() {
     </p>`;
 }
 
+// ==================== CHALLENGE / DINO CONSTANTS ====================
+// Defined here (before SCRIPT) so mkChallengeHTML() can reference them
+// during SCRIPT array initialization without hitting the TDZ.
+const CHALLENGE_CLICKS = 24; // Ali is turning 24!
+const DINO_DELAY_MS    = 3000; // ms after chess card before dino wanders in
+
 // ==================== MESSAGE SCRIPT ====================
 // Each beat is one of:
 //   { type:'preload', ... }   — shown instantly when chat opens
@@ -670,8 +676,6 @@ function loadState() {
 }
 
 // ==================== CHALLENGE ====================
-const CHALLENGE_CLICKS = 24; // Ali is turning 24!
-const DINO_DELAY_MS    = 3000; // ms after chess card before dino wanders in
 let challengeCount    = 0;
 let challengeDone     = false;
 let heartfeltShown    = false;
