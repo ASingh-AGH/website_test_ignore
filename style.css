@@ -20,6 +20,8 @@
   --primary:   #ff4fa3;
   --secondary: #ffe94f;
   --accent:    #4ff0ff;
+  /* Layout helpers */
+  --wa-header-height: 58px;
 }
 
 html, body {
@@ -222,7 +224,7 @@ body {
 
 #spotify-float {
   position: fixed;
-  top: 58px;
+  top: var(--wa-header-height);
   right: 0;
   width: 300px;
   z-index: 100;

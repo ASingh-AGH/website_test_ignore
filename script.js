@@ -650,6 +650,7 @@ function loadState() {
 
 // ==================== CHALLENGE ====================
 const CHALLENGE_CLICKS = 24; // Ali is turning 24!
+const DINO_DELAY_MS    = 3000; // ms after chess card before dino wanders in
 let challengeCount    = 0;
 let challengeDone     = false;
 let heartfeltShown    = false;
@@ -713,8 +714,8 @@ function revealHeartfelt() {
       chatEl.insertBefore(buildChessWrap(), typingEl);
       scrollBottom();
       playDing();
-      // Dino wanders in ~3 s after chess
-      setTimeout(showDinoGame, 3000);
+      // Dino wanders in after chess
+      setTimeout(showDinoGame, DINO_DELAY_MS);
     }, 4500);
   }, 1800);
 }
@@ -816,10 +817,12 @@ function showDinoGame() {
   const DPR  = () => window.devicePixelRatio || 1;
 
   // ---------- constants ----------
-  const GROUND_RATIO = 0.72; // fraction of canvas height for ground line
-  const GRAVITY  = 0.55;
-  const JUMP_VEL = -12.5;
-  const BASE_SPD = 6;
+  const GROUND_RATIO          = 0.72; // fraction of canvas height for ground line
+  const GRAVITY               = 0.55;
+  const JUMP_VEL              = -12.5;
+  const BASE_SPD              = 6;
+  const MAX_SPEED             = 16;
+  const SPEED_INCREASE_INTERVAL = 200; // score ticks between speed bumps
 
   // ---------- state ----------
   let phase     = 'intro'; // intro | idle | playing | dead
@@ -1093,7 +1096,7 @@ function showDinoGame() {
     // --- playing ---
     score++;
     if (score > highScore) highScore = score;
-    if (score % 200 === 0) speed = Math.min(BASE_SPD + score / 200, 16);
+    if (score % SPEED_INCREASE_INTERVAL === 0) speed = Math.min(BASE_SPD + score / SPEED_INCREASE_INTERVAL, MAX_SPEED);
 
     // dino physics
     if (!dinoOnGround) {
