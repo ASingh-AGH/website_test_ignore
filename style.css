@@ -579,11 +579,11 @@ body {
 
 /* ---- Heartfelt ---- */
 .wa-bubble.heartfelt-bubble {
-  background: rgba(255,255,255,0.93);
-  color: #333;
+  background: #ffffff;
+  color: #111;
   padding-bottom: 1.6rem;
 }
-.wa-bubble.heartfelt-bubble::before { border-top-color: rgba(255,255,255,0.93); }
+.wa-bubble.heartfelt-bubble::before { border-top-color: #ffffff; }
 .wa-bubble.heartfelt-bubble .wa-time { color: #999; }
 
 .heartfelt-bubble h3 {
@@ -595,7 +595,7 @@ body {
 .heartfelt-bubble p {
   font-size: 0.9rem;
   line-height: 1.8;
-  color: #444;
+  color: #222;
   margin-bottom: 0.4rem;
 }
 .heartfelt-sig {

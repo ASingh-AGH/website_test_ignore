@@ -168,8 +168,7 @@ function mkChallengeHTML() {
   for (let i = 0; i < CHALLENGE_CLICKS; i++) {
     slots += `<span class="candle-slot" id="candle-${i}">🕯️</span>`;
   }
-  return `<div class="challenge-header">🎂 Light Ali's birthday candles!</div>
-    <div id="candle-grid">${slots}</div>
+  return `<div id="candle-grid">${slots}</div>
     <button id="chat-challenge-btn">🕯️ Light a candle!</button>`;
 }
 
@@ -404,6 +403,10 @@ function launchFlyingPlane(onArrived) {
     } else {
       // Arrived — hover
       plane.classList.add('plane-ready');
+      plane.addEventListener('click', () => {
+        saveState();
+        window.location.href = 'map.html';
+      }, { once: true });
       if (onArrived) onArrived();
       return; // stop RAF
     }
@@ -660,9 +663,13 @@ function revealPostSequence() {
   // Step 1: "oh no look out!"
   appendTyped('oh no look out! 😱', 1000, () => {
     setTimeout(() => {
-      // Step 2: "here comes an airoplane!" + launch plane
-      appendTyped('here comes an airoplane! ✈️', 800, () => {
-        launchFlyingPlane(onPlaneArrived);
+      // Step 2: "here comes the airoplane" + "try and catch it" + launch plane
+      appendTyped('here comes the airoplane ✈️', 800, () => {
+        setTimeout(() => {
+          appendTyped('try and catch it 😄', 600, () => {
+            launchFlyingPlane(onPlaneArrived);
+          });
+        }, 400);
       });
     }, 400);
   });
