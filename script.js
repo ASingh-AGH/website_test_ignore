@@ -147,7 +147,7 @@ function mkStickerHTML(url) {
   img.className = 'sticker-img';
   img.src       = url;
   img.alt       = 'sticker';
-  img.loading   = 'lazy';
+  img.loading   = 'eager';
   return img.outerHTML;
 }
 
@@ -181,12 +181,12 @@ function mkPlaneHTML() {
 function mkChallengeHTML() {
   return `<div class="challenge-header">🔒 Unlock Ali's Secret Message</div>
     <p style="font-size:0.82rem;color:var(--wa-text-dim);margin:0.35rem 0 0.65rem;">
-      Click <strong style="color:var(--secondary)">15&nbsp;times</strong>
+      Click <strong style="color:var(--secondary)">24&nbsp;times</strong>
       to unlock. No shortcuts. Pure dedication.
     </p>
     <span id="chat-challenge-count">0</span>
     <div id="chat-progress-wrap"><div id="chat-progress-bar"></div></div>
-    <p id="chat-challenge-progress">15 clicks to go…</p>
+    <p id="chat-challenge-progress">24 clicks to go…</p>
     <button id="chat-challenge-btn">💖 Click for Ali</button>`;
 }
 
@@ -239,7 +239,6 @@ const SCRIPT = [
   { type:'msg', text:'You absolute legend!! You made it another year without being launched into the sun 🌞', typing:1800 },
   { type:'msg', text:'🎈🎊🎉🦄🚀🎂🥳🎉🎊🎈',                                                  typing: 700  },
   { type:'msg', text:'We brought the whole crew to celebrate 🥳',                              typing:1000  },
-  { type:'msg', bubbleClass:'chess-bubble', html:mkChessHTML(),                                typing:1400  },
 
   { type:'gate', label:'Tap for the receipts 😬' },
 
@@ -535,13 +534,13 @@ function restoreChallenge() {
   const progressEl = document.getElementById('chat-challenge-progress');
 
   if (countEl) countEl.textContent = challengeCount;
-  if (barEl)   barEl.style.width   = (challengeCount / 15 * 100) + '%';
+  if (barEl)   barEl.style.width   = (challengeCount / 24 * 100) + '%';
 
   if (challengeDone) {
     if (progressEl) progressEl.textContent = '🎉 Unlocked!';
     if (btn) { btn.disabled = true; btn.textContent = '✅ Done!'; }
   } else {
-    const rem = 15 - challengeCount;
+    const rem = 24 - challengeCount;
     if (progressEl) progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
     initChallenge(); // re-attach click handler
   }
@@ -573,8 +572,22 @@ function buildStickerWrap(url) {
   img.className = 'sticker-img';
   img.src       = url;   // hardcoded constant — not from sessionStorage
   img.alt       = 'sticker';
-  img.loading   = 'lazy';
+  img.loading   = 'eager';
   bubble.appendChild(img);
+  const ts = document.createElement('span');
+  ts.className   = 'wa-time';
+  ts.textContent = getTime();
+  bubble.appendChild(ts);
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
+function buildChessWrap() {
+  const wrap   = document.createElement('div');
+  wrap.className = 'wa-msg received';
+  const bubble = document.createElement('div');
+  bubble.className = 'wa-bubble chess-bubble';
+  bubble.innerHTML = mkChessHTML(); // mkChessHTML is hardcoded, not user-supplied
   const ts = document.createElement('span');
   ts.className   = 'wa-time';
   ts.textContent = getTime();
@@ -614,6 +627,7 @@ function loadState() {
     // Restore end stickers that had appeared after the heartfelt
     if (endStickersShown >= 1) chatEl.insertBefore(buildStickerWrap(STICKER_END_1), typingEl);
     if (endStickersShown >= 2) chatEl.insertBefore(buildStickerWrap(STICKER_END_2), typingEl);
+    if (endStickersShown >= 3) chatEl.insertBefore(buildChessWrap(), typingEl);
   }
 
   requestAnimationFrame(() => chatEl.classList.remove('restore-mode'));
@@ -652,19 +666,19 @@ function initChallenge() {
     const progressEl = document.getElementById('chat-challenge-progress');
 
     countEl.textContent = challengeCount;
-    barEl.style.width   = (challengeCount / 15 * 100) + '%';
+    barEl.style.width   = (challengeCount / 24 * 100) + '%';
 
     for (let i = 0; i < 10; i++) spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
     playPop();
 
-    if (challengeCount >= 15) {
+    if (challengeCount >= 24) {
       challengeDone = true;
       progressEl.textContent = '🎉 Unlocked!';
       btn.disabled    = true;
       btn.textContent = '✅ Done!';
       setTimeout(revealHeartfelt, 900);
     } else {
-      const rem = 15 - challengeCount;
+      const rem = 24 - challengeCount;
       progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
     }
   });
@@ -693,6 +707,12 @@ function revealHeartfelt() {
       scrollBottom();
       playDing();
     }, 3000);
+    setTimeout(() => {
+      endStickersShown = 3;
+      chatEl.insertBefore(buildChessWrap(), typingEl);
+      scrollBottom();
+      playDing();
+    }, 4500);
   }, 1800);
 }
 
