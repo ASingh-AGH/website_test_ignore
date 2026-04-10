@@ -627,7 +627,7 @@ function initChallenge() {
     if (challengeCount >= CHALLENGE_CLICKS) {
       challengeDone = true;
       btn.disabled    = true;
-      btn.textContent = '✅ Done!';
+      btn.textContent = '🎂';
       setTimeout(revealPostSequence, 900);
     }
   });
