@@ -154,8 +154,7 @@ function mkStickerHTML(url) {
 // ==================== MESSAGE TEMPLATES ====================
 function mkChessHTML() {
   return `<span class="chess-card-board">♟ ♔ ♛ ♜ ♝ ♞</span>
-    <strong style="display:block;margin:0.35rem 0 0.2rem;">We made you a chess game 🎮</strong>
-    <div style="font-size:0.82rem;color:var(--wa-text-dim);margin-bottom:0.6rem;">Two players · pass the device · zero regrets 😄</div>
+    <strong style="display:block;margin:0.35rem 0 0.65rem;">a game for two 🎮</strong>
     <a href="chess.html" class="chat-card-btn chess-btn">♟️ Open Chess</a>`;
 }
 
@@ -163,20 +162,6 @@ function mkBirthdayHTML() {
   return `🎂🎉<br>HAPPY BIRTHDAY,<br>ALI!!<br>🎉🎂`;
 }
 
-function mkJokeHTML(emoji, tag, body) {
-  return `<span class="joke-emoji">${emoji}</span>
-    <strong style="color:var(--secondary);display:block;margin:0.15rem 0 0.35rem;">${tag}</strong>
-    <span style="font-size:0.9rem;">${body}</span>`;
-}
-
-function mkPlaneHTML() {
-  return `<div style="font-size:0.85rem;color:var(--wa-text-dim);margin-bottom:0.25rem;">
-      this plane is flying to Katowice. yes, really 😂
-    </div>
-    <div style="font-size:0.82rem;color:var(--wa-green);margin-top:0.15rem;">
-      ✈️ catch the plane flying around your screen!
-    </div>`;
-}
 
 function mkChallengeHTML() {
   let slots = '';
@@ -189,24 +174,17 @@ function mkChallengeHTML() {
 }
 
 function mkHeartfeltHTML() {
-  return `<h3>🎂 For Ali, with love 🎂</h3>
-    <p>Okay, the chaos is over — for a second. 🙂<br><br>
-    In all seriousness, you are one of the most genuinely kind,
-    hilariously funny, and wonderfully weird people I know.
-    Every moment with you turns into a story worth retelling
-    (sometimes against our will 😂).<br><br>
-    You bring so much light and laughter into the lives of everyone
-    around you, and today we get to celebrate <em>you</em> — the
-    legend, the myth, the person who somehow makes even the most
-    mundane Tuesday feel like an adventure.<br><br>
-    I hope this birthday is as brilliant, chaotic, and utterly
-    unforgettable as you are. You deserve every single good thing
-    the universe has to offer — and maybe a slice (or five) of cake.
-    🎂🍰🧁</p>
-    <p class="heartfelt-sig">
-      Happy Birthday, Ali! 🥳🎉<br>
-      <span>— Your friends who definitely didn't spend too long on this</span>
-    </p>`;
+  return `<p><strong>Dear Ali,</strong></p>
+    <p>we got to know each other in krakow, that was 6 years ago, crazy how time flies. I have had the pleasure of being your best friend for all these years, and I would wish for many many more to come, filled with health, hope, learning and luck, and many many shenanigans.</p>
+    <p>Unlike the delivery of this website i hope that life gives you its sweetest fruits and rewards in the right time. I have watched you grow through many things (relationships, freindships, work, war and now most recently schooling again), change with the times (how you approach problems, how you assert your presence, how you talk and how serious your approach to life is), for the better (im proud of you), youve been a solid pillar of support in my life, and i imagine in the lives of the people around you as well.</p>
+    <p>Let this year hold the mightiest bench press numbers, the highest grades and the craziest most heartwarming stories of your youth, lets grow together as people and as honorary family for you are my brother and i dont know what i would have done without you and your motivating strength, sarcastic inputs and tollerance for my horrible sense of humor.</p>
+    <p>Youre the bestiestest freind a girl could ask for and I hope i get to wish you for many, many decades to come,</p>
+    <p class="heartfelt-sig">love, Athena. 💙</p>`;
+}
+
+function mkPostBubbleHTML() {
+  return `<span class="post-envelope-icon">💌</span>
+    <div class="post-open-hint">tap to open</div>`;
 }
 
 // ==================== CHALLENGE / DINO CONSTANTS ====================
@@ -237,24 +215,9 @@ const SCRIPT = [
 
   { type:'gate', label:'Tap to open 📩' },
 
-  // ---- Phase 2: birthday reveal ----
-  { type:'msg', bubbleClass:'birthday-bubble', html:mkBirthdayHTML(),                           typing:2200,
-    onShow: () => { launchConfettiBurst(120); playFanfare(); } },
-  { type:'msg', text:'You absolute legend!! You made it another year without being launched into the sun 🌞', typing:1800 },
-  { type:'msg', text:'🎈🎊🎉🦄🚀🎂🥳🎉🎊🎈',                                                  typing: 700  },
-  { type:'msg', text:'We brought the whole crew to celebrate 🥳',                              typing:1000  },
-
-  { type:'gate', label:'One more thing... ✈️' },
-
-  // ---- Phase 4: airplane ----
-  { type:'msg', text:'oh also btw...',                                                           typing: 600 },
-  { type:'msg', bubbleClass:'plane-bubble', html:mkPlaneHTML(),                                 typing:1050,
-    onShow: () => launchFlyingPlane() },
-
-  { type:'gate', label:'Unlock your birthday gift 🎁' },
-
-  // ---- Phase 5: challenge (heartfelt is unlocked programmatically after) ----
-  { type:'msg', bubbleClass:'challenge-bubble', html:mkChallengeHTML(),                         typing:1500 },
+  // ---- Phase 2: candle challenge ----
+  { type:'msg', text:'now light your candles 🕯️',                                                   typing: 900  },
+  { type:'msg', bubbleClass:'challenge-bubble', html:mkChallengeHTML(),                              typing:1500 },
 ];
 
 // ==================== CHAT ENGINE ====================
@@ -324,7 +287,6 @@ function appendMsg(beat) {
   playDing();
   if (beat.onShow) beat.onShow();
   if (beat.bubbleClass === 'challenge-bubble') initChallenge();
-  if (beat.bubbleClass === 'plane-bubble')    revealHeaderIcon('hdr-map-icon');
   return el;
 }
 
@@ -399,13 +361,12 @@ tapEl.addEventListener('keydown', e => {
 // ==================== FLYING PLANE ====================
 let planeActive = false; // prevent relaunching
 
-function launchFlyingPlane() {
+function launchFlyingPlane(onArrived) {
   const plane = document.getElementById('flying-plane');
   if (!plane || planeActive) return;
   planeActive = true;
 
   plane.removeAttribute('hidden');
-  showToast('✈️ Catch the plane to see the map!');
 
   let x  = Math.random() * Math.max(1, window.innerWidth  - 80);
   let y  = 80 + Math.random() * Math.max(1, window.innerHeight - 180);
@@ -441,9 +402,9 @@ function launchFlyingPlane() {
       vx = vx * 0.90 + (cx - x) * 0.018 * t;
       vy = vy * 0.90 + (cy - y) * 0.018 * t;
     } else {
-      // Arrived — hover + make clickable
+      // Arrived — hover
       plane.classList.add('plane-ready');
-      showToast('✈️ Tap the plane to see the map!');
+      if (onArrived) onArrived();
       return; // stop RAF
     }
 
@@ -466,13 +427,6 @@ function launchFlyingPlane() {
   }
 
   rafId = requestAnimationFrame(animPlane);
-
-  // Navigate to map when the plane is ready and tapped
-  plane.addEventListener('click', () => {
-    if (!plane.classList.contains('plane-ready')) return;
-    saveState();
-    window.location.href = 'map.html';
-  });
 }
 // ==================== STATE PERSISTENCE ====================
 // State is saved to sessionStorage only when the user explicitly navigates to
@@ -578,6 +532,20 @@ function buildChessWrap() {
   return wrap;
 }
 
+function buildPostBubbleWrap() {
+  const wrap   = document.createElement('div');
+  wrap.className = 'wa-msg received';
+  const bubble = document.createElement('div');
+  bubble.className = 'wa-bubble post-bubble';
+  bubble.innerHTML = mkPostBubbleHTML(); // mkPostBubbleHTML is hardcoded, not user-supplied
+  const ts = document.createElement('span');
+  ts.className   = 'wa-time';
+  ts.textContent = getTime();
+  bubble.appendChild(ts);
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
 function loadState() {
   if (sessionStorage.getItem('wa_return') !== '1') return false;
   const raw = sessionStorage.getItem('wa_state');
@@ -620,10 +588,6 @@ function loadState() {
   }
 
   // Restore header unlock icons
-  const planeBeatIdx = SCRIPT.findIndex(b => b.bubbleClass === 'plane-bubble');
-  if (planeBeatIdx >= 0 && (s.renderedIdxs || []).includes(planeBeatIdx)) {
-    revealHeaderIcon('hdr-map-icon');
-  }
   if (endStickersShown >= 3) revealHeaderIcon('hdr-chess-icon');
 
   if (s.gateOpen && s.gateLabel) {
@@ -664,9 +628,71 @@ function initChallenge() {
       challengeDone = true;
       btn.disabled    = true;
       btn.textContent = '✅ Done!';
-      setTimeout(revealHeartfelt, 900);
+      setTimeout(revealPostSequence, 900);
     }
   });
+}
+
+function revealPostSequence() {
+  // Helper: show typing then append a plain text bubble
+  function appendTyped(text, typingMs, onDone) {
+    showTyping();
+    statusEl.textContent = 'typing...';
+    setTimeout(() => {
+      hideTyping();
+      const wrap   = document.createElement('div');
+      wrap.className = 'wa-msg received';
+      const bubble = document.createElement('div');
+      bubble.className = 'wa-bubble';
+      bubble.textContent = text;
+      const ts = document.createElement('span');
+      ts.className   = 'wa-time';
+      ts.textContent = getTime();
+      bubble.appendChild(ts);
+      wrap.appendChild(bubble);
+      chatEl.insertBefore(wrap, typingEl);
+      scrollBottom();
+      playDing();
+      if (onDone) onDone();
+    }, typingMs);
+  }
+
+  // Step 1: "oh no look out!"
+  appendTyped('oh no look out! 😱', 1000, () => {
+    setTimeout(() => {
+      // Step 2: "here comes an airoplane!" + launch plane
+      appendTyped('here comes an airoplane! ✈️', 800, () => {
+        launchFlyingPlane(onPlaneArrived);
+      });
+    }, 400);
+  });
+
+  function onPlaneArrived() {
+    setTimeout(() => {
+      // Step 3: "but wait theres more?"
+      appendTyped('but wait theres more? 👀', 700, () => {
+        setTimeout(() => {
+          // Step 4: "open this!"
+          appendTyped('open this! 💌', 800, () => {
+            setTimeout(() => {
+              // Step 5: closed post bubble
+              const postWrap = buildPostBubbleWrap();
+              chatEl.insertBefore(postWrap, typingEl);
+              scrollBottom();
+              playDing();
+              const bubble = postWrap.querySelector('.post-bubble');
+              bubble.addEventListener('click', () => {
+                if (bubble.dataset.opened) return;
+                bubble.dataset.opened = '1';
+                bubble.classList.add('post-opened');
+                revealHeartfelt();
+              });
+            }, 400);
+          });
+        }, 600);
+      });
+    }, 800);
+  }
 }
 
 function revealHeartfelt() {
