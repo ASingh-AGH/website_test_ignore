@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💬 Message for Ali</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Preload sticker images so they appear instantly when chat reaches them -->
+  <link rel="preload" as="image" href="https://github.com/user-attachments/assets/847194f1-748a-4dfa-9ca0-f5328ce6ecf7" />
+  <link rel="preload" as="image" href="https://github.com/user-attachments/assets/d14a392f-0828-4423-8d50-cc61574e3d60" />
+  <link rel="preload" as="image" href="https://github.com/user-attachments/assets/defd0182-a554-49e9-93d9-e1cb6c261ad3" />
+  <link rel="preload" as="image" href="https://github.com/user-attachments/assets/c2ef7183-c644-40ca-9ba3-e1e8f029cf87" />
+</head>
+<body>
+
+  <!-- ==================== LOADING SCREEN ==================== -->
+  <div id="wa-loading" aria-label="Loading chat">
+    <div class="wa-load-logo">💬</div>
+    <div class="wa-load-name">Updating chat</div>
+    <div class="wa-load-bar"><div id="wa-load-progress"></div></div>
+    <p class="wa-load-hint">Loading<span class="wa-load-dots"></span></p>
+    <p class="wa-load-footer">🔒 end-to-end encrypted</p>
+  </div>
+
+  <!-- ==================== WHATSAPP CHAT APP ==================== -->
+  <div id="wa-app" aria-hidden="true">
+
+    <!-- Chat header -->
+    <header id="wa-header">
+      <div class="wa-header-left">
+        <div class="wa-avatar">💙</div>
+        <div class="wa-header-info">
+          <div class="wa-header-name">Cестрëнка</div>
+          <div id="wa-header-status" class="wa-header-status">online</div>
+        </div>
+      </div>
+      <div class="wa-header-icons">
+        <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer"
+           class="wa-header-icon-link" aria-label="Search / Pinterest">🔍</a>
+        <a href="https://discord.com" target="_blank" rel="noopener noreferrer"
+           class="wa-header-icon-link" aria-label="Call / Discord">📞</a>
+        <!-- Unlock icons — revealed progressively as the chat advances -->
+        <a id="hdr-map-icon"   href="map.html"   hidden class="wa-header-icon-link header-unlock-icon" aria-label="Map">✈️</a>
+        <a id="hdr-chess-icon" href="chess.html" hidden class="wa-header-icon-link header-unlock-icon" aria-label="Chess">♟️</a>
+        <span id="hdr-dino-icon" hidden class="wa-header-icon-link header-unlock-icon" style="cursor:default" aria-label="Dino game">🦕</span>
+        <button id="wa-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false">⋮</button>
+        <!-- Dropdown sits inside .wa-header-icons for relative positioning -->
+        <div id="wa-menu-dropdown" hidden role="menu">
+          <a href="map.html" role="menuitem" class="wa-menu-item">🗺️ Map</a>
+          <a href="chess.html" role="menuitem" class="wa-menu-item">♟️ Chess Game</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Messages area -->
+    <div id="chat-window">
+      <div id="chat-messages">
+        <div class="wa-date-chip">Today</div>
+        <!-- Messages injected by script.js -->
+
+        <!-- Typing indicator — always sits at the bottom of the list -->
+        <div id="typing-indicator" class="wa-msg received" style="display:none"
+             aria-live="polite" aria-label="Your friends are typing">
+          <div class="typing-bubble">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fake input bar (acts as tap-to-continue) -->
+    <div id="wa-input-bar">
+      <button class="wa-emoji-btn" aria-label="Emoji" tabindex="-1">😊</button>
+      <div id="wa-tap-hint" class="wa-tap-hint" role="button" tabindex="0"
+           aria-label="Tap to continue">Type a message</div>
+      <button class="wa-send-btn locked" id="wa-send-btn" aria-label="Continue">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor"
+            d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817z"/>
+        </svg>
+      </button>
+    </div>
+
+  </div><!-- /#wa-app -->
+
+  <!-- Confetti container (unchanged) -->
+  <div id="confetti-container" aria-hidden="true"></div>
+
+  <!-- Flying plane overlay — launched when plane bubble appears -->
+  <div id="flying-plane" hidden aria-hidden="true">✈️</div>
+
+  <!-- Spotify floating mini-player (top-right, ombre border) -->
+  <div id="spotify-float">
+    <iframe
+      src="https://open.spotify.com/embed/album/76V9WMm2cXFd2UPntSGV7A?utm_source=generator"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+      title="French music">
+    </iframe>
+  </div>
+
+  <!-- Dino game — walks in from right after all messages are done -->
+  <div id="dino-overlay" hidden>
+    <canvas id="dino-canvas"></canvas>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
