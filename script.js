@@ -179,15 +179,17 @@ function mkPlaneHTML() {
 }
 
 function mkChallengeHTML() {
-  return `<div class="challenge-header">🔒 Unlock Ali's Secret Message</div>
-    <p style="font-size:0.82rem;color:var(--wa-text-dim);margin:0.35rem 0 0.65rem;">
-      Click <strong style="color:var(--secondary)">24&nbsp;times</strong>
-      to unlock. No shortcuts. Pure dedication.
+  let slots = '';
+  for (let i = 0; i < CHALLENGE_CLICKS; i++) {
+    slots += `<span class="candle-slot" id="candle-${i}">🕯️</span>`;
+  }
+  return `<div class="challenge-header">🎂 Light Ali's birthday candles!</div>
+    <p style="font-size:0.82rem;color:var(--wa-text-dim);margin:0.2rem 0 0.6rem;">
+      Ali is turning <strong style="color:var(--secondary)">24</strong> — one candle per year!
     </p>
-    <span id="chat-challenge-count">0</span>
-    <div id="chat-progress-wrap"><div id="chat-progress-bar"></div></div>
-    <p id="chat-challenge-progress">24 clicks to go…</p>
-    <button id="chat-challenge-btn">💖 Click for Ali</button>`;
+    <div id="candle-grid">${slots}</div>
+    <p id="chat-challenge-progress">0 / 24 candles lit</p>
+    <button id="chat-challenge-btn">🕯️ Light a candle!</button>`;
 }
 
 function mkHeartfeltHTML() {
@@ -541,19 +543,19 @@ document.addEventListener('click', (e) => {
 
 function restoreChallenge() {
   const btn        = document.getElementById('chat-challenge-btn');
-  const countEl    = document.getElementById('chat-challenge-count');
-  const barEl      = document.getElementById('chat-progress-bar');
   const progressEl = document.getElementById('chat-challenge-progress');
 
-  if (countEl) countEl.textContent = challengeCount;
-  if (barEl)   barEl.style.width   = (challengeCount / CHALLENGE_CLICKS * 100) + '%';
+  // Restore lit candles (no pop animation for already-lit ones)
+  for (let i = 0; i < challengeCount; i++) {
+    const candleEl = document.getElementById('candle-' + i);
+    if (candleEl) candleEl.classList.add('lit');
+  }
 
   if (challengeDone) {
-    if (progressEl) progressEl.textContent = '🎉 Unlocked!';
+    if (progressEl) progressEl.textContent = '🎉 All 24 candles lit!';
     if (btn) { btn.disabled = true; btn.textContent = '✅ Done!'; }
   } else {
-    const rem = CHALLENGE_CLICKS - challengeCount;
-    if (progressEl) progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
+    if (progressEl) progressEl.textContent = challengeCount + ' / 24 candles lit';
     initChallenge(); // re-attach click handler
   }
 }
@@ -682,25 +684,26 @@ function initChallenge() {
     if (challengeDone) return;
     challengeCount++;
 
-    const countEl    = document.getElementById('chat-challenge-count');
-    const barEl      = document.getElementById('chat-progress-bar');
     const progressEl = document.getElementById('chat-challenge-progress');
 
-    countEl.textContent = challengeCount;
-    barEl.style.width   = (challengeCount / CHALLENGE_CLICKS * 100) + '%';
+    // Light the newly added candle
+    const candleEl = document.getElementById('candle-' + (challengeCount - 1));
+    if (candleEl) {
+      candleEl.classList.add('lit', 'just-lit');
+      setTimeout(() => candleEl.classList.remove('just-lit'), 500);
+    }
 
     for (let i = 0; i < 10; i++) spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
     playPop();
 
     if (challengeCount >= CHALLENGE_CLICKS) {
       challengeDone = true;
-      progressEl.textContent = '🎉 Unlocked!';
+      if (progressEl) progressEl.textContent = '🎉 All 24 candles lit!';
       btn.disabled    = true;
       btn.textContent = '✅ Done!';
       setTimeout(revealHeartfelt, 900);
     } else {
-      const rem = CHALLENGE_CLICKS - challengeCount;
-      progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
+      if (progressEl) progressEl.textContent = challengeCount + ' / 24 candles lit';
     }
   });
 }
