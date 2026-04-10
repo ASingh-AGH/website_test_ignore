@@ -534,13 +534,13 @@ function restoreChallenge() {
   const progressEl = document.getElementById('chat-challenge-progress');
 
   if (countEl) countEl.textContent = challengeCount;
-  if (barEl)   barEl.style.width   = (challengeCount / 24 * 100) + '%';
+  if (barEl)   barEl.style.width   = (challengeCount / CHALLENGE_CLICKS * 100) + '%';
 
   if (challengeDone) {
     if (progressEl) progressEl.textContent = '🎉 Unlocked!';
     if (btn) { btn.disabled = true; btn.textContent = '✅ Done!'; }
   } else {
-    const rem = 24 - challengeCount;
+    const rem = CHALLENGE_CLICKS - challengeCount;
     if (progressEl) progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
     initChallenge(); // re-attach click handler
   }
@@ -649,6 +649,7 @@ function loadState() {
 }
 
 // ==================== CHALLENGE ====================
+const CHALLENGE_CLICKS = 24; // Ali is turning 24!
 let challengeCount    = 0;
 let challengeDone     = false;
 let heartfeltShown    = false;
@@ -666,19 +667,19 @@ function initChallenge() {
     const progressEl = document.getElementById('chat-challenge-progress');
 
     countEl.textContent = challengeCount;
-    barEl.style.width   = (challengeCount / 24 * 100) + '%';
+    barEl.style.width   = (challengeCount / CHALLENGE_CLICKS * 100) + '%';
 
     for (let i = 0; i < 10; i++) spawnInteractiveConfetti(e.clientX, e.clientY, 'explode');
     playPop();
 
-    if (challengeCount >= 24) {
+    if (challengeCount >= CHALLENGE_CLICKS) {
       challengeDone = true;
       progressEl.textContent = '🎉 Unlocked!';
       btn.disabled    = true;
       btn.textContent = '✅ Done!';
       setTimeout(revealHeartfelt, 900);
     } else {
-      const rem = 24 - challengeCount;
+      const rem = CHALLENGE_CLICKS - challengeCount;
       progressEl.textContent = rem + ' click' + (rem === 1 ? '' : 's') + ' to go…';
     }
   });
