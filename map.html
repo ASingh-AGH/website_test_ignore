@@ -407,9 +407,44 @@
     #map-password-error[hidden] { display: none; }
     #map-password-screen[hidden] { display: none !important; }
     #map-content[hidden] { display: none; }
+
+    /* ---- SPOTIFY FLOAT (matches index.html / style.css) ---- */
+    @keyframes spotify-ombre {
+      0%   { box-shadow: 0 0 0 3px #1db954; }
+      25%  { box-shadow: 0 0 0 3px #ff4fa3; }
+      50%  { box-shadow: 0 0 0 3px #ffe94f; }
+      75%  { box-shadow: 0 0 0 3px #4ff0ff; }
+      100% { box-shadow: 0 0 0 3px #1db954; }
+    }
+    #spotify-float {
+      position: fixed;
+      top: 58px; /* matches --wa-header-height */
+      right: 0;
+      width: 300px;
+      z-index: 100;
+      border-radius: 0 0 0 14px;
+      overflow: hidden;
+      animation: spotify-ombre 8s ease infinite;
+    }
+    #spotify-float iframe {
+      display: block;
+      width: 100%;
+      height: 80px;
+      border: none;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Spotify floating mini-player — persists across pages -->
+  <div id="spotify-float">
+    <iframe
+      src="https://open.spotify.com/embed/album/76V9WMm2cXFd2UPntSGV7A?utm_source=generator&autoplay=1"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+      title="French music">
+    </iframe>
+  </div>
 
   <!-- WA-style back header -->
   <header class="wa-page-header">
@@ -564,12 +599,8 @@
     <span id="stop-katowice" class="route-stop">🎉 Katowice</span>
   </div>
 
-  <div id="landing-msg">🎉 Destination reached — Katowice! Happy Birthday Ali! 🇵🇱🎂</div>
-
   <div class="btn-row">
     <a href="index.html" class="btn btn-ghost">‹ Back to chat</a>
-    <button id="replay-btn" class="btn btn-primary">▶ Go down memory lane</button>
-    <a href="chess.html" class="btn btn-chess">♟️ Play Chess!</a>
     <a href="https://www.geoguessr.com" target="_blank" rel="noopener noreferrer"
        class="btn btn-geo" aria-label="Play GeoGuessr (opens in new tab)">🌍 GeoGuessr</a>
   </div>
@@ -617,6 +648,18 @@
         ],
       },
     };
+
+    // ==================== IMAGE PRELOAD ====================
+    // Kick off background fetches so images are in the browser cache before
+    // the user opens any city modal.
+    (function preloadCityPhotos() {
+      Object.values(CITY_PHOTOS).forEach(city => {
+        city.photos.forEach(p => {
+          const img = new Image();
+          img.src = p.src;
+        });
+      });
+    })();
 
     // ==================== PHOTO MODAL ====================
     const photoModal    = document.getElementById('photo-modal');
@@ -685,8 +728,8 @@
     const planeEl    = document.getElementById('map-plane');
     const mapWrap    = document.getElementById('map-wrap');
     const svgEl      = document.getElementById('europe-map');
-    const landingMsg = document.getElementById('landing-msg');
-    const replayBtn  = document.getElementById('replay-btn');
+    const landingMsg = document.getElementById('landing-msg'); // may be null if element is removed
+    const replayBtn  = document.getElementById('replay-btn'); // may be null if button is removed
 
     const TOTAL_LEN   = 667; // approximate; refined by getTotalLength() in init()
     const DURATION_MS = 8000;
@@ -718,7 +761,7 @@
       });
       stopsActivated = new Array(STOPS.length).fill(false);
 
-      landingMsg.style.display = 'none';
+      if (landingMsg) landingMsg.style.display = 'none';
       planeEl.style.display    = 'none';
       startTime   = null;
       if (animationId) cancelAnimationFrame(animationId);
@@ -754,7 +797,7 @@
 
       if (index === STOPS.length - 1) {
         setTimeout(() => {
-          landingMsg.style.display = 'block';
+          if (landingMsg) landingMsg.style.display = 'block';
           spawnConfetti();
         }, 400);
       }
@@ -796,7 +839,7 @@
       setTimeout(() => { animationId = requestAnimationFrame(animateFrame); }, 500);
     }
 
-    replayBtn.addEventListener('click', startAnimation);
+    if (replayBtn) replayBtn.addEventListener('click', startAnimation);
     // startAnimation is called by the password gate; NOT on load.
 
     // ==================== PASSWORD GATE ====================
