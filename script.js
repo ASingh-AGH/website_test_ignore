@@ -458,6 +458,7 @@ function saveState() {
     gateLabel:      gateOpen ? tapEl.textContent : null,
     challengeCount,
     challengeDone,
+    postIntroShown,
   }));
   sessionStorage.setItem('wa_return', '1');
 }
@@ -563,6 +564,7 @@ function loadState() {
   challengeDone     = s.challengeDone     || false;
   heartfeltShown    = s.heartfeltShown    || false;
   endStickersShown  = s.endStickersShown  || 0;
+  postIntroShown    = s.postIntroShown    || false;
 
   // Re-render saved beats without pop-in animation
   chatEl.classList.add('restore-mode');
@@ -605,7 +607,14 @@ function loadState() {
   // If the challenge is done but the heartfelt hasn't been revealed yet, the
   // user returned from map.html before finishing the post sequence — replay it.
   if (challengeDone && !heartfeltShown) {
-    setTimeout(revealPostSequence, 600);
+    if (postIntroShown) {
+      // The 3 intro messages were already shown before navigation; render them
+      // instantly and pick up from "but wait theres more?" to avoid replaying
+      // the plane animation from scratch.
+      setTimeout(restorePostIntroAndContinue, 600);
+    } else {
+      setTimeout(revealPostSequence, 600);
+    }
   }
 
   return true;
@@ -616,6 +625,7 @@ let challengeCount    = 0;
 let challengeDone     = false;
 let heartfeltShown    = false;
 let endStickersShown  = 0;
+let postIntroShown    = false; // true once the 3 intro messages before the plane have been appended
 
 function initChallenge() {
   const btn = document.getElementById('chat-challenge-btn');
@@ -643,70 +653,93 @@ function initChallenge() {
   });
 }
 
-function revealPostSequence() {
-  // Helper: show typing then append a plain text bubble
-  function appendTyped(text, typingMs, onDone) {
-    showTyping();
-    statusEl.textContent = 'typing...';
-    setTimeout(() => {
-      hideTyping();
-      const wrap   = document.createElement('div');
-      wrap.className = 'wa-msg received';
-      const bubble = document.createElement('div');
-      bubble.className = 'wa-bubble';
-      bubble.textContent = text;
-      const ts = document.createElement('span');
-      ts.className   = 'wa-time';
-      ts.textContent = getTime();
-      bubble.appendChild(ts);
-      wrap.appendChild(bubble);
-      chatEl.insertBefore(wrap, typingEl);
-      scrollBottom();
-      playDing();
-      if (onDone) onDone();
-    }, typingMs);
-  }
+// Module-level helper: show typing indicator then append a plain text bubble.
+function appendTypedBubble(text, typingMs, onDone) {
+  showTyping();
+  statusEl.textContent = 'typing...';
+  setTimeout(() => {
+    hideTyping();
+    const wrap   = document.createElement('div');
+    wrap.className = 'wa-msg received';
+    const bubble = document.createElement('div');
+    bubble.className = 'wa-bubble';
+    bubble.textContent = text;
+    const ts = document.createElement('span');
+    ts.className   = 'wa-time';
+    ts.textContent = getTime();
+    bubble.appendChild(ts);
+    wrap.appendChild(bubble);
+    chatEl.insertBefore(wrap, typingEl);
+    scrollBottom();
+    playDing();
+    if (onDone) onDone();
+  }, typingMs);
+}
 
-  // Step 1: "oh no look out!"
-  appendTyped('oh no look out! 😱', 1000, () => {
+// Step 2 of the post-challenge sequence ("but wait theres more?" onwards).
+// Called both after the plane animation completes and on restore when the
+// intro messages have already been pre-rendered.
+function revealPostStep2() {
+  setTimeout(() => {
+    appendTypedBubble('but wait theres more? 👀', 700, () => {
+      setTimeout(() => {
+        appendTypedBubble('open this! 💌', 800, () => {
+          setTimeout(() => {
+            const postWrap = buildPostBubbleWrap();
+            chatEl.insertBefore(postWrap, typingEl);
+            scrollBottom();
+            playDing();
+            const bubble = postWrap.querySelector('.post-bubble');
+            bubble.addEventListener('click', () => {
+              if (bubble.dataset.opened) return;
+              bubble.dataset.opened = '1';
+              bubble.classList.add('post-opened');
+              revealHeartfelt();
+            });
+          }, 400);
+        });
+      }, 600);
+    });
+  }, 800);
+}
+
+// On restore: render the 3 intro messages instantly (no typing delay) and
+// jump straight to step 2 so the user isn't shown the plane animation again.
+function restorePostIntroAndContinue() {
+  function addStaticBubble(text) {
+    const wrap   = document.createElement('div');
+    wrap.className = 'wa-msg received';
+    const bubble = document.createElement('div');
+    bubble.className = 'wa-bubble';
+    bubble.textContent = text;
+    const ts = document.createElement('span');
+    ts.className   = 'wa-time';
+    ts.textContent = getTime();
+    bubble.appendChild(ts);
+    wrap.appendChild(bubble);
+    chatEl.insertBefore(wrap, typingEl);
+  }
+  addStaticBubble('oh no look out! 😱');
+  addStaticBubble('here comes the airoplane ✈️');
+  addStaticBubble('try and catch it 😄');
+  scrollBottom();
+  revealPostStep2();
+}
+
+function revealPostSequence() {
+  // Step 1: three intro messages, then launch the plane
+  appendTypedBubble('oh no look out! 😱', 1000, () => {
     setTimeout(() => {
-      // Step 2: "here comes the airoplane" + "try and catch it" + launch plane
-      appendTyped('here comes the airoplane ✈️', 800, () => {
+      appendTypedBubble('here comes the airoplane ✈️', 800, () => {
         setTimeout(() => {
-          appendTyped('try and catch it 😄', 600, () => {
-            launchFlyingPlane(onPlaneArrived);
+          appendTypedBubble('try and catch it 😄', 600, () => {
+            postIntroShown = true;
+            launchFlyingPlane(revealPostStep2);
           });
         }, 400);
       });
     }, 400);
   });
-
-  function onPlaneArrived() {
-    setTimeout(() => {
-      // Step 3: "but wait theres more?"
-      appendTyped('but wait theres more? 👀', 700, () => {
-        setTimeout(() => {
-          // Step 4: "open this!"
-          appendTyped('open this! 💌', 800, () => {
-            setTimeout(() => {
-              // Step 5: closed post bubble
-              const postWrap = buildPostBubbleWrap();
-              chatEl.insertBefore(postWrap, typingEl);
-              scrollBottom();
-              playDing();
-              const bubble = postWrap.querySelector('.post-bubble');
-              bubble.addEventListener('click', () => {
-                if (bubble.dataset.opened) return;
-                bubble.dataset.opened = '1';
-                bubble.classList.add('post-opened');
-                revealHeartfelt();
-              });
-            }, 400);
-          });
-        }, 600);
-      });
-    }, 800);
-  }
 }
 
 function revealHeartfelt() {
