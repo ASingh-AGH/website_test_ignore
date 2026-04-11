@@ -479,7 +479,7 @@ function restoreChallenge() {
   }
 
   if (challengeDone) {
-    if (btn) { btn.disabled = true; btn.textContent = '✅ Done!'; }
+    if (btn) { btn.disabled = true; btn.textContent = '🎂'; }
   } else {
     initChallenge(); // re-attach click handler
   }
@@ -817,6 +817,16 @@ document.addEventListener('DOMContentLoaded', () => {
         menuBtn.setAttribute('aria-expanded', 'false');
       }
     });
+  }
+});
+
+// When the browser restores this page from the bfcache (user pressed the
+// Back button rather than clicking the in-page back link), scripts are NOT
+// re-executed and loadState() is never called.  Force a proper reload so the
+// normal restore path runs and revealPostSequence() fires if needed.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted && sessionStorage.getItem('wa_return') === '1') {
+    window.location.reload();
   }
 });
 
