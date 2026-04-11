@@ -309,9 +309,44 @@
       0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
       100% { transform: translateY(110vh)  rotate(720deg); opacity: 0.2; }
     }
+
+    /* ---- SPOTIFY FLOAT (matches index.html / style.css) ---- */
+    @keyframes spotify-ombre {
+      0%   { box-shadow: 0 0 0 3px #1db954; }
+      25%  { box-shadow: 0 0 0 3px #ff4fa3; }
+      50%  { box-shadow: 0 0 0 3px #ffe94f; }
+      75%  { box-shadow: 0 0 0 3px #4ff0ff; }
+      100% { box-shadow: 0 0 0 3px #1db954; }
+    }
+    #spotify-float {
+      position: fixed;
+      top: 58px; /* matches --wa-header-height */
+      right: 0;
+      width: 300px;
+      z-index: 100;
+      border-radius: 0 0 0 14px;
+      overflow: hidden;
+      animation: spotify-ombre 8s ease infinite;
+    }
+    #spotify-float iframe {
+      display: block;
+      width: 100%;
+      height: 80px;
+      border: none;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Spotify floating mini-player — persists across pages -->
+  <div id="spotify-float">
+    <iframe
+      src="https://open.spotify.com/embed/album/76V9WMm2cXFd2UPntSGV7A?utm_source=generator&autoplay=1"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+      title="French music">
+    </iframe>
+  </div>
 
   <!-- WA-style back header -->
   <header class="wa-page-header">
