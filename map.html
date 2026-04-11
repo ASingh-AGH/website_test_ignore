@@ -618,6 +618,18 @@
       },
     };
 
+    // ==================== IMAGE PRELOAD ====================
+    // Kick off background fetches so images are in the browser cache before
+    // the user opens any city modal.
+    (function preloadCityPhotos() {
+      Object.values(CITY_PHOTOS).forEach(city => {
+        city.photos.forEach(p => {
+          const img = new Image();
+          img.src = p.src;
+        });
+      });
+    })();
+
     // ==================== PHOTO MODAL ====================
     const photoModal    = document.getElementById('photo-modal');
     const modalCityName = document.getElementById('modal-city-name');

@@ -601,6 +601,13 @@ function loadState() {
   }
 
   scrollBottom();
+
+  // If the challenge is done but the heartfelt hasn't been revealed yet, the
+  // user returned from map.html before finishing the post sequence — replay it.
+  if (challengeDone && !heartfeltShown) {
+    setTimeout(revealPostSequence, 600);
+  }
+
   return true;
 }
 
