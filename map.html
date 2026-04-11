@@ -728,7 +728,7 @@
     const planeEl    = document.getElementById('map-plane');
     const mapWrap    = document.getElementById('map-wrap');
     const svgEl      = document.getElementById('europe-map');
-    const landingMsg = document.getElementById('landing-msg');
+    const landingMsg = document.getElementById('landing-msg'); // may be null if element is removed
     const replayBtn  = document.getElementById('replay-btn'); // may be null if button is removed
 
     const TOTAL_LEN   = 667; // approximate; refined by getTotalLength() in init()
@@ -761,7 +761,7 @@
       });
       stopsActivated = new Array(STOPS.length).fill(false);
 
-      landingMsg.style.display = 'none';
+      if (landingMsg) landingMsg.style.display = 'none';
       planeEl.style.display    = 'none';
       startTime   = null;
       if (animationId) cancelAnimationFrame(animationId);
@@ -797,7 +797,7 @@
 
       if (index === STOPS.length - 1) {
         setTimeout(() => {
-          landingMsg.style.display = 'block';
+          if (landingMsg) landingMsg.style.display = 'block';
           spawnConfetti();
         }, 400);
       }
